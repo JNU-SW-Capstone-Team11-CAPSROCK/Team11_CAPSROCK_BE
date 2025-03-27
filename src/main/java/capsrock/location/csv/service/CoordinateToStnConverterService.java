@@ -1,7 +1,7 @@
-package capsrock.location.service;
+package capsrock.location.csv.service;
 
-import capsrock.location.model.entity.WeatherSpot;
-import capsrock.location.repository.WeatherSpotRepository;
+import capsrock.location.csv.entity.WeatherSpot;
+import capsrock.location.csv.repository.WeatherSpotRepository;
 import jakarta.transaction.Transactional;
 import java.util.Comparator;
 import java.util.List;
@@ -14,7 +14,8 @@ public class CoordinateToStnConverterService {
 
     private final WeatherSpotRepository weatherSpotRepository;
 
-    public CoordinateToStnConverterService(WeatherSpotRepository weatherSpotRepository) {
+    public CoordinateToStnConverterService(
+            capsrock.location.csv.repository.WeatherSpotRepository weatherSpotRepository) {
         this.weatherSpotRepository = weatherSpotRepository;
     }
 
