@@ -1,4 +1,4 @@
-package capsrock.location.model.entity;
+package capsrock.location.csv.entity;
 
 
 import jakarta.persistence.Entity;

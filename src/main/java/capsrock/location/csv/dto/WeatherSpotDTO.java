@@ -1,6 +1,6 @@
-package capsrock.location.dto;
+package capsrock.location.csv.dto;
 
-import capsrock.location.model.entity.WeatherSpot;
+import capsrock.location.csv.entity.WeatherSpot;
 import com.opencsv.bean.CsvBindByName;
 
 public final class WeatherSpotDTO {

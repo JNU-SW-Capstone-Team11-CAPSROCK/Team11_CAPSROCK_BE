@@ -1,6 +1,7 @@
-package capsrock.location.reader;
+package capsrock.location.csv.reader;
 
-import capsrock.location.dto.WeatherSpotDTO;
+
+import capsrock.location.csv.dto.WeatherSpotDTO;
 import com.opencsv.bean.CsvToBeanBuilder;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,9 +14,9 @@ public class WeatherSpotCsvReader {
 
     public List<WeatherSpotDTO> readCsv() {
         try {
-            return new CsvToBeanBuilder<WeatherSpotDTO>(
+            return new CsvToBeanBuilder<capsrock.location.csv.dto.WeatherSpotDTO>(
                     new FileReader("src/main/resources/WeatherSpot.csv"))
-                    .withType(WeatherSpotDTO.class)
+                    .withType(capsrock.location.csv.dto.WeatherSpotDTO.class)
                     .build()
                     .parse();
 
