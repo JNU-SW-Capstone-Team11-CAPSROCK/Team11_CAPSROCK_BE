@@ -18,13 +18,13 @@ public class WeatherInfoClient {
 
     public void getWeatherInfo() {
 
-        System.out.println(weatherRequestConfig);
+//        System.out.println(weatherRequestConfig);
         var response = restClient.get()
                 .uri(URI.create(weatherRequestConfig.requestUrl()+ weatherRequestConfig.restApiKey()))
                 .retrieve()
                 .toEntity(String.class);
 
         // 응답 출력
-        System.out.println(response.getBody());
+//        System.out.println(response.getBody());
     }
 }
