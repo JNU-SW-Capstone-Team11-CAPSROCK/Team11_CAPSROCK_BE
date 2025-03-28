@@ -1,5 +1,6 @@
 package capsrock.location.csv.service;
 
+import capsrock.location.csv.dto.StnDTO;
 import capsrock.location.csv.entity.WeatherSpot;
 import capsrock.location.csv.repository.WeatherSpotRepository;
 import jakarta.transaction.Transactional;
@@ -20,15 +21,18 @@ public class CoordinateToStnConverterService {
     }
 
     @Transactional
-    public Integer convertToStn(Double latitude, Double longitude) {
+    public StnDTO convertToStn(Double latitude, Double longitude) {
         List<WeatherSpot> weatherSpots = weatherSpotRepository.findAll(); //todo: 성능 최적화
 
-        return weatherSpots.stream()
+        Integer stn = weatherSpots
+                .stream()
                 .min(Comparator.comparingDouble(
                         spot -> haversine(latitude, longitude,
                                 spot.getLatitude(), spot.getLongitude())))
                 .map(WeatherSpot::getStn)
                 .orElse(null); // todo: orElseThrow 로 리팩터링
+
+        return new StnDTO(stn);
     }
 
 

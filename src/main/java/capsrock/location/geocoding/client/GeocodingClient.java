@@ -16,7 +16,7 @@ public class GeocodingClient {
         this.restClient = RestClient.builder().build();
     }
 
-    public void doReverseGeocoding(Double longitude, Double latitude) {
+    public ReverseGeocodingResponse doReverseGeocoding(Double longitude, Double latitude) {
 
         var uri = UriComponentsBuilder
                 .fromHttpUrl(geocodingRequestConfig.requestUrl())
@@ -32,13 +32,12 @@ public class GeocodingClient {
                 .build()
                 .toUri();
 
-        System.out.println("uri = " + uri);
-
-        var response = restClient.get()
+        return restClient
+                .get()
                 .uri(uri)
                 .retrieve()
-                .toEntity(ReverseGeocodingResponse.class);
+                .toEntity(ReverseGeocodingResponse.class)
+                .getBody();
 
-        System.out.println("response = " + response);
     }
 }

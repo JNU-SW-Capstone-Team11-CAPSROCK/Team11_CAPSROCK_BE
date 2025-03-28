@@ -8,7 +8,6 @@ import java.util.List;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record ReverseGeocodingResponse(ResponseData response) {
 
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record ResponseData(
             ServiceData service,
             String status,
@@ -16,7 +15,6 @@ public record ReverseGeocodingResponse(ResponseData response) {
             List<ResultData> result
     ) {}
 
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record ServiceData(
             String name,
             String version,
@@ -24,27 +22,23 @@ public record ReverseGeocodingResponse(ResponseData response) {
             String time
     ) {}
 
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record InputData(
             PointData point,
             String crs,
             String type
     ) {}
 
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record PointData(
             String x,
             String y
     ) {}
 
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record ResultData(
             String type,
             String text,
             StructureData structure
     ) {}
 
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public record StructureData(
             String level0,
             String level1,
