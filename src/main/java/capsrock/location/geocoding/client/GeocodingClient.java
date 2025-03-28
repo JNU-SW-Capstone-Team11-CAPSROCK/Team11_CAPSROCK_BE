@@ -1,6 +1,7 @@
 package capsrock.location.geocoding.client;
 
 import capsrock.location.geocoding.config.GeocodingRequestConfig;
+import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -15,7 +16,7 @@ public class GeocodingClient {
         this.restClient = RestClient.builder().build();
     }
 
-    public void doReverseGeocoding(Double longitude, Double latitude) {
+    public ReverseGeocodingResponse doReverseGeocoding(Double longitude, Double latitude) {
 
         var uri = UriComponentsBuilder
                 .fromHttpUrl(geocodingRequestConfig.requestUrl())
@@ -24,20 +25,19 @@ public class GeocodingClient {
                 .queryParam("key", geocodingRequestConfig.restApiKey())
                 .queryParam("errorFormat", "json")
                 .queryParam("point", longitude + "," + latitude)
-                .queryParam("type", "BOTH")
+                .queryParam("type", "PARCEL")
                 .queryParam("zipcode", false)
                 .queryParam("simple", false)
                 .queryParam("crs", "EPSG:4326")
                 .build()
                 .toUri();
 
-        System.out.println("uri = " + uri);
-
-        var response = restClient.get()
+        return restClient
+                .get()
                 .uri(uri)
                 .retrieve()
-                .toEntity(String.class);
+                .toEntity(ReverseGeocodingResponse.class)
+                .getBody();
 
-        System.out.println("response = " + response);
     }
 }

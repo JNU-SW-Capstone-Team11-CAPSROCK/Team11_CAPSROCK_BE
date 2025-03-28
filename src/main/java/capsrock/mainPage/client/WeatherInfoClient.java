@@ -20,11 +20,10 @@ public class WeatherInfoClient {
 
 //        System.out.println(weatherRequestConfig);
         var response = restClient.get()
-                .uri(URI.create(weatherRequestConfig.requestUrl()+ weatherRequestConfig.restApiKey()))
+                .uri(URI.create(weatherRequestConfig.requestUrl() + weatherRequestConfig.restApiKey()))
                 .retrieve()
                 .toEntity(String.class);
 
-        // 응답 출력
-//        System.out.println(response.getBody());
+        System.out.println(response.getBody());
     }
 }
