@@ -2,6 +2,8 @@ package capsrock.mainPage.client;
 
 import java.io.IOException;
 import java.net.URI;
+
+import capsrock.mainPage.dto.Grid;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +24,7 @@ public class WeatherInfoClientTest {
     @Test
     @DisplayName("날씨 정보")
     void getWeatherInfo() {
-        weatherInfoClient.getWeatherInfo();
+        weatherInfoClient.getWeatherInfo(new Grid(60, 125));
     }
 
     @Test

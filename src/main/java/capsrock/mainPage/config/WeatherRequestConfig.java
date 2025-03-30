@@ -5,5 +5,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "weather")
 public record WeatherRequestConfig(
         String restApiKey,
-        String requestUrl
+        String weatherRequestUrl
 ) { }

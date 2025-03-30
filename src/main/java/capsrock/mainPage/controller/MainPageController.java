@@ -26,6 +26,6 @@ public class MainPageController {
             @RequestParam("longitude") Double longitude){
 
         MainPageRequest mainPageRequest = new MainPageRequest(latitude, longitude);
-        //return new ResponseEntity<>(mainPageService.getWeatherInfo(mainPageRequest), HttpStatus.OK);
+        return new ResponseEntity<>(mainPageService.getWeatherInfo(mainPageRequest), HttpStatus.OK);
     }
 }
