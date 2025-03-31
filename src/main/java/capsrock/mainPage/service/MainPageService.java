@@ -1,7 +1,5 @@
 package capsrock.mainPage.service;
 
-import capsrock.location.csv.dto.StnDTO;
-import capsrock.location.csv.service.CoordinateToStnConverterService;
 import capsrock.location.geocoding.client.GeocodingClient;
 import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse.StructureData;
@@ -26,30 +24,26 @@ import java.util.*;
 public class MainPageService {
 
     private final GeocodingClient geocodingClient;
-    private final CoordinateToStnConverterService coordinateToStnConverterService;
     private final WeatherInfoClient weatherInfoClient;
     private final ObjectMapper objectMapper;
 
     public MainPageService(GeocodingClient geocodingClient,
-                           CoordinateToStnConverterService coordinateToStnConverterService,
-                           WeatherInfoClient weatherInfoClient,
-                           ObjectMapper objectMapper) {
+            WeatherInfoClient weatherInfoClient,
+            ObjectMapper objectMapper) {
         this.geocodingClient = geocodingClient;
-        this.coordinateToStnConverterService = coordinateToStnConverterService;
         this.weatherInfoClient = weatherInfoClient;
         this.objectMapper = objectMapper;
     }
 
     public MainPageResponse getWeatherInfo(MainPageRequest mainPageRequest) {
-        AddressDTO addressDTO = getAddressFromGPS(mainPageRequest.longitude(), mainPageRequest.latitude());
+        AddressDTO addressDTO = getAddressFromGPS(mainPageRequest.longitude(),
+                mainPageRequest.latitude());
 
-        StnDTO stnDTO = coordinateToStnConverterService
-                .convertToStn(mainPageRequest.longitude(), mainPageRequest.latitude());
-
-        String weatherInfo = weatherInfoClient.getWeatherInfo(Grid.convertToGrid(mainPageRequest.latitude(), mainPageRequest.longitude()));
+        String weatherInfo = weatherInfoClient.getWeatherInfo(
+                Grid.convertToGrid(mainPageRequest.latitude(), mainPageRequest.longitude()));
 
         List<TodayWeather> todayWeathers = parseTodayWeatherInfo(weatherInfo);
-        List<WeekWeather> weekWeathers  = parseWeekWeatherData(weatherInfo);
+        List<WeekWeather> weekWeathers = parseWeekWeatherData(weatherInfo);
 
         TodayWeather today = todayWeathers.getFirst();
         WeekWeather week = weekWeathers.getFirst();
@@ -176,7 +170,9 @@ public class MainPageService {
             if (itemsNode.isArray()) {
                 for (JsonNode item : itemsNode) {
                     String fcstDate = item.path("fcstDate").asText();
-                    if (fcstDate.compareTo(today) < 0) continue; // 오늘 이전 데이터 제외
+                    if (fcstDate.compareTo(today) < 0) {
+                        continue; // 오늘 이전 데이터 제외
+                    }
 
                     // Map에 날짜별 WeekWeather 객체가 없으면 새로 생성
                     weekWeatherMap.putIfAbsent(fcstDate, new WeekWeather(
