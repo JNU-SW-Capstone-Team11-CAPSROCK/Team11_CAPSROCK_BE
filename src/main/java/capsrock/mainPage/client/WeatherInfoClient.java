@@ -1,9 +1,13 @@
 package capsrock.mainPage.client;
 
 import capsrock.mainPage.config.WeatherRequestConfig;
-import java.net.URI;
+import java.time.LocalDate;
+
+import capsrock.mainPage.dto.Grid;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.client.RestTemplate;
 
 @Component
 public class WeatherInfoClient {
@@ -16,14 +20,24 @@ public class WeatherInfoClient {
         this.restClient = RestClient.builder().build();
     }
 
-    public void getWeatherInfo() {
+    public String getWeatherInfo(Grid grid) {
 
-//        System.out.println(weatherRequestConfig);
-        var response = restClient.get()
-                .uri(URI.create(weatherRequestConfig.requestUrl() + weatherRequestConfig.restApiKey()))
-                .retrieve()
-                .toEntity(String.class);
+        String url = UriComponentsBuilder.fromHttpUrl(weatherRequestConfig.weatherRequestUrl())
+                .queryParam("serviceKey", weatherRequestConfig.restApiKey())
+                .queryParam("numOfRows", 1000) // 충분히 많은 데이터 요청
+                .queryParam("pageNo", 1)
+                .queryParam("base_date", getCurrentDate())
+                .queryParam("base_time", "0500") // 당일 예보 기준 시간
+                .queryParam("nx", grid.nx())
+                .queryParam("ny", grid.ny())
+                .queryParam("dataType", "JSON")
+                .toUriString();
 
-        System.out.println(response.getBody());
+        return new RestTemplate().getForObject(url, String.class);
     }
+
+    private String getCurrentDate() {
+        return LocalDate.now().toString().replace("-", "");
+    }
+
 }
