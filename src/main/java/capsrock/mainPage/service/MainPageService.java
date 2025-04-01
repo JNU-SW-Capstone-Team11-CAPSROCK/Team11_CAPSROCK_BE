@@ -12,29 +12,26 @@ import capsrock.mainPage.dto.TodayWeather;
 import capsrock.mainPage.dto.WeekWeather;
 import capsrock.mainPage.dto.request.MainPageRequest;
 import capsrock.mainPage.dto.response.MainPageResponse;
+import capsrock.mainPage.dto.response.WeatherApiResponse;
 import capsrock.mainPage.util.TimeUtil;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class MainPageService {
 
     private final GeocodingClient geocodingClient;
     private final WeatherInfoClient weatherInfoClient;
-    private final ObjectMapper objectMapper;
 
     public MainPageService(GeocodingClient geocodingClient,
-            WeatherInfoClient weatherInfoClient,
-            ObjectMapper objectMapper) {
+                           WeatherInfoClient weatherInfoClient) {
         this.geocodingClient = geocodingClient;
         this.weatherInfoClient = weatherInfoClient;
-        this.objectMapper = objectMapper;
     }
 
     public MainPageResponse getWeatherInfo(MainPageRequest mainPageRequest) {
@@ -45,18 +42,15 @@ public class MainPageService {
         Grid grid = GpsToGridConverter.convertToGrid(mainPageRequest.latitude(),
                 mainPageRequest.longitude());
 
-        weatherInfoClient.getWeatherInfo(grid, TimeUtil.roundDownTime());
+        WeatherApiResponse weatherApiResponse = weatherInfoClient.getWeatherInfo(grid, TimeUtil.roundDownTime());
 
-        String weatherInfo = "";
-
-        List<TodayWeather> todayWeathers = parseTodayWeatherInfo(weatherInfo);
-        List<WeekWeather> weekWeathers = parseWeekWeatherData(weatherInfo);
-
-        TodayWeather today = todayWeathers.getFirst();
-        WeekWeather week = weekWeathers.getFirst();
+        List<TodayWeather> todayWeathers = getTodayWeatherList(
+                weatherApiResponse.response().body().items().item());
+        List<WeekWeather> weekWeathers = getWeekWeatherList(
+                weatherApiResponse.response().body().items().item());
 
         return new MainPageResponse(
-                new Dashboard(week.maxTemp(), week.minTemp(), today.temp()),
+                new Dashboard(weekWeathers.getFirst().maxTemp(), weekWeathers.getFirst().minTemp(), todayWeathers.getFirst().temp()),
                 todayWeathers,
                 weekWeathers);
 
@@ -71,173 +65,55 @@ public class MainPageService {
         return new AddressDTO(structure.level1(), structure.level2());
     }
 
-    private List<TodayWeather> parseTodayWeatherInfo(String rawData) {
-        try {
+    private List<TodayWeather> getTodayWeatherList(List<WeatherApiResponse.Item> items) {
 
-            JsonNode rootNode = objectMapper.readTree(rawData);
+        Map<String, Map<String, String>> groupedByTime = items.stream()
+                .filter(item -> item.fcstDate().equals(getCurrentDate()))
+                .filter(item -> List.of("TMP", "SKY", "PTY").contains(item.category()))
+                .collect(Collectors.groupingBy(
+                        WeatherApiResponse.Item::fcstTime,
+                        Collectors.toMap(WeatherApiResponse.Item::category, WeatherApiResponse.Item::fcstValue)
+                ));
 
-            // 기상청 API 응답 구조에 맞게 데이터 추출
-            JsonNode itemsNode = rootNode
-                    .path("response")
-                    .path("body")
-                    .path("items")
-                    .path("item");
-
-            List<TodayWeather> todayWeathers = new ArrayList<>();
-
-            String today = getCurrentDate();
-
-            // 응답 데이터를 TodayWeather 객체로 변환
-            if (itemsNode.isArray()) {
-                String currentTime = "";
-                String weather = "";
-                int temp = 0;
-
-                for (JsonNode item : itemsNode) {
-                    // 오늘 날짜의 데이터만 처리
-                    String fcstDate = item.path("fcstDate").asText();
-                    if (!fcstDate.equals(today)) {
-                        continue;
-                    }
-
-                    String fcstTime = item.path("fcstTime").asText();
-                    String category = item.path("category").asText();
-                    String value = item.path("fcstValue").asText();
-
-                    // 시간이 바뀌면 새 객체 생성
-                    if (!currentTime.equals(fcstTime) && !currentTime.isEmpty()) {
-                        todayWeathers.add(new TodayWeather(currentTime, weather, temp));
-                        weather = ""; // 초기화
-                    }
-
-                    currentTime = fcstTime;
-
-                    // 카테고리별 데이터 처리
-                    switch (category) {
-                        case "SKY": // 하늘 상태(맑음, 구름많음, 흐림)
-                            weather = interpretSkyValue(value);
-                            break;
-                        case "PTY": // 강수 형태(비, 비/눈, 눈, 소나기)
-                            if (!value.equals("0")) { // 0이 아니면 강수 있음
-                                weather = interpretPtyValue(value);
-                            }
-                            break;
-                        case "T1H": // 기온
-                        case "TMP": // 기온 (API 버전에 따라 다를 수 있음)
-                            temp = Integer.parseInt(value);
-                            break;
-                    }
-                }
-
-                // 마지막 시간대 데이터 추가
-                if (!currentTime.isEmpty()) {
-                    todayWeathers.add(new TodayWeather(currentTime, weather, temp));
-                }
-            }
-
-            return todayWeathers;
-
-        } catch (Exception e) {
-            return List.of(); // 에러 시 빈 리스트 반환
-        }
-
-    }
-
-    private String interpretSkyValue(String skyValue) {
-        return switch (skyValue) {
-            case "1" -> "맑음";
-            case "3" -> "구름많음";
-            case "4" -> "흐림";
-            default -> "알 수 없음";
-        };
-    }
-
-    private String interpretPtyValue(String ptyValue) {
-        return switch (ptyValue) {
-            case "1" -> "비";
-            case "2" -> "비/눈";
-            case "3" -> "눈";
-            case "4" -> "소나기";
-            default -> "알 수 없음";
-        };
-    }
-
-    private List<WeekWeather> parseWeekWeatherData(String rawData) {
-        try {
-            JsonNode rootNode = objectMapper.readTree(rawData);
-            JsonNode itemsNode = rootNode
-                    .path("response")
-                    .path("body")
-                    .path("items")
-                    .path("item");
-
-            Map<String, WeekWeather> weekWeatherMap = new HashMap<>();
-            String today = getCurrentDate();
-
-            if (itemsNode.isArray()) {
-                for (JsonNode item : itemsNode) {
-                    String fcstDate = item.path("fcstDate").asText();
-                    if (fcstDate.compareTo(today) < 0) {
-                        continue; // 오늘 이전 데이터 제외
-                    }
-
-                    // Map에 날짜별 WeekWeather 객체가 없으면 새로 생성
-                    weekWeatherMap.putIfAbsent(fcstDate, new WeekWeather(
-                            convertToDayOfWeek(fcstDate), Integer.MIN_VALUE, Integer.MAX_VALUE, "맑음"
-                    ));
-
-                    WeekWeather weatherData = weekWeatherMap.get(fcstDate);
-                    String category = item.path("category").asText();
-                    String value = item.path("fcstValue").asText();
-
-                    switch (category) {
-                        case "TMAX": // 최고 기온
-                            weekWeatherMap.put(fcstDate, new WeekWeather(
-                                    weatherData.dayOfWeek(),
-                                    Math.max(weatherData.maxTemp(), Integer.parseInt(value)),
-                                    weatherData.minTemp(),
-                                    weatherData.weather()
-                            ));
-                            break;
-                        case "TMIN": // 최저 기온
-                            weekWeatherMap.put(fcstDate, new WeekWeather(
-                                    weatherData.dayOfWeek(),
-                                    weatherData.maxTemp(),
-                                    Math.min(weatherData.minTemp(), Integer.parseInt(value)),
-                                    weatherData.weather()
-                            ));
-                            break;
-                        case "SKY":
-                            weekWeatherMap.put(fcstDate, new WeekWeather(
-                                    weatherData.dayOfWeek(),
-                                    weatherData.maxTemp(),
-                                    weatherData.minTemp(),
-                                    interpretSkyValue(value)
-                            ));
-                            break;
-                        case "PTY":
-                            if (!value.equals("0")) {
-                                weekWeatherMap.put(fcstDate, new WeekWeather(
-                                        weatherData.dayOfWeek(),
-                                        weatherData.maxTemp(),
-                                        weatherData.minTemp(),
-                                        interpretPtyValue(value)
-                                ));
-                            }
-                            break;
-                    }
-                }
-            }
-
-            return new ArrayList<>(weekWeatherMap.values());
-
-        } catch (Exception e) {
-            return List.of();
-        }
+        return groupedByTime.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> new TodayWeather(
+                        entry.getKey(),
+                        getWeatherDescription(entry.getValue().get("SKY"), entry.getValue().get("PTY")),
+                        Integer.parseInt(entry.getValue().getOrDefault("TMP", "0"))
+                ))
+                .collect(Collectors.toList());
     }
 
     private String getCurrentDate() {
         return LocalDate.now().toString().replace("-", "");
+    }
+
+    private List<WeekWeather> getWeekWeatherList(List<WeatherApiResponse.Item> items) {
+
+        Map<String, Map<String, List<String>>> groupedByDate = items.stream()
+                .filter(item -> List.of("TMN", "TMX", "SKY", "PTY").contains(item.category()))
+                .collect(Collectors.groupingBy(
+                        WeatherApiResponse.Item::fcstDate,
+                        Collectors.groupingBy(
+                                WeatherApiResponse.Item::category,
+                                Collectors.mapping(WeatherApiResponse.Item::fcstValue, Collectors.toList())
+                        )
+                ));
+
+        return groupedByDate.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> new WeekWeather(
+                        convertToDayOfWeek(entry.getKey()),
+                        //TODO: 받아온 API 데이터에 최고기온, 최저기온 값이 없을 때 다음 페이지에 대한 API 재요청 로직이 필요함
+                        (int) Math.round(Double.parseDouble(entry.getValue().getOrDefault("TMX", List.of("0")).stream().findFirst().orElse("0"))), // TMX 처리
+                        (int) Math.round(Double.parseDouble(entry.getValue().getOrDefault("TMN", List.of("0")).stream().findFirst().orElse("0"))), // TMN 처리
+                        getWeatherDescription(
+                                getMostFrequent(entry.getValue().getOrDefault("SKY", List.of("1"))), // SKY 값 중 최빈값 선택
+                                getMostFrequent(entry.getValue().getOrDefault("PTY", List.of("0")))  // PTY 값 중 최빈값 선택
+                        )
+                ))
+                .collect(Collectors.toList());
     }
 
     private String convertToDayOfWeek(String fcstDate) {
@@ -249,4 +125,30 @@ public class MainPageService {
         return dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.KOREAN);
     }
 
+    private static String getWeatherDescription(String sky, String pty) {
+        if (pty != null && !pty.equals("0")) {
+            return switch (pty) {
+                case "1" -> "없음";
+                case "2" -> "비/눈";
+                case "3" -> "눈";
+                case "4" -> "소나기";
+                default -> "알 수 없음";
+            };
+        }
+        return switch (sky) {
+            case "1" -> "맑음";
+            case "3" -> "구름많음";
+            case "4" -> "흐림";
+            default -> "알 수 없음";
+        };
+    }
+
+    private String getMostFrequent(List<String> values) {
+        return values.stream()
+                .collect(Collectors.groupingBy(v -> v, Collectors.counting()))
+                .entrySet().stream()
+                .max(Comparator.comparingLong(Map.Entry::getValue)) // 가장 많이 나온 값 선택
+                .map(Map.Entry::getKey)
+                .orElse("0");
+    }
 }
