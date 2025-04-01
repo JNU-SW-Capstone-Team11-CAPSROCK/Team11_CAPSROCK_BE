@@ -26,13 +26,15 @@ public class WeatherInfoClient {
                 .queryParam("serviceKey", weatherRequestConfig.restApiKey())
                 .queryParam("numOfRows", 1000) // 충분히 많은 데이터 요청
                 .queryParam("pageNo", 1)
+                .queryParam("dataType", "JSON")
                 .queryParam("base_date", getCurrentDate())
                 .queryParam("base_time", "0500") // 당일 예보 기준 시간
                 .queryParam("nx", grid.nx())
                 .queryParam("ny", grid.ny())
-                .queryParam("dataType", "JSON")
+                .build(false)
                 .toUriString();
 
+        System.out.println(new RestTemplate().getForObject(url, String.class));
         return new RestTemplate().getForObject(url, String.class);
     }
 
