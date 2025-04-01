@@ -13,6 +13,7 @@ import capsrock.mainPage.dto.WeekWeather;
 import capsrock.mainPage.dto.request.MainPageRequest;
 import capsrock.mainPage.dto.response.MainPageResponse;
 import capsrock.mainPage.dto.response.WeatherApiResponse;
+import capsrock.mainPage.dto.response.WeatherApiResponse.Item;
 import capsrock.mainPage.util.TimeUtil;
 import org.springframework.stereotype.Service;
 
@@ -44,13 +45,15 @@ public class MainPageService {
 
         WeatherApiResponse weatherApiResponse = weatherInfoClient.getWeatherInfo(grid, TimeUtil.roundDownTime());
 
+        List<Item> itemList = weatherApiResponse.response().body().items().item();
+
         List<TodayWeather> todayWeathers = getTodayWeatherList(
-                weatherApiResponse.response().body().items().item());
+                itemList);
         List<WeekWeather> weekWeathers = getWeekWeatherList(
-                weatherApiResponse.response().body().items().item());
+                itemList);
 
         return new MainPageResponse(
-                new Dashboard(weekWeathers.getFirst().maxTemp(), weekWeathers.getFirst().minTemp(), todayWeathers.getFirst().temp()),
+                new Dashboard(addressDTO, weekWeathers.getFirst().maxTemp(), weekWeathers.getFirst().minTemp(), todayWeathers.getFirst().temp()),
                 todayWeathers,
                 weekWeathers);
 
