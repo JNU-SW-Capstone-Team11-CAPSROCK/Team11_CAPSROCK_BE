@@ -7,7 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 @Configuration
 @EnableConfigurationProperties(WeatherRequestConfig.class)  // WeatherRequestConfig을 빈으로 등록
 @PropertySource({"classpath:application-secret.properties",
-        "classpath:application-weather.properties"})
+        "classpath:application-grid.properties"})
 public class WeatherRequestRegistrar {
 
 }
