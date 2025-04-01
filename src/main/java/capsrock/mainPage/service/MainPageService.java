@@ -4,14 +4,16 @@ import capsrock.location.geocoding.client.GeocodingClient;
 import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse.StructureData;
 import capsrock.location.geocoding.dto.service.AddressDTO;
+import capsrock.location.grid.util.GpsToGridConverter;
 import capsrock.mainPage.client.WeatherInfoClient;
 import capsrock.mainPage.dto.Dashboard;
-import capsrock.mainPage.dto.Grid;
+import capsrock.location.grid.dto.Grid;
 import capsrock.mainPage.dto.TodayWeather;
 import capsrock.mainPage.dto.WeekWeather;
 import capsrock.mainPage.dto.request.MainPageRequest;
 import capsrock.mainPage.dto.response.MainPageResponse;
 import capsrock.mainPage.dto.response.WeatherApiResponse;
+import capsrock.mainPage.util.TimeUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -27,30 +29,28 @@ public class MainPageService {
     private final WeatherInfoClient weatherInfoClient;
 
     public MainPageService(GeocodingClient geocodingClient,
-            WeatherInfoClient weatherInfoClient
-            ) {
+                           WeatherInfoClient weatherInfoClient) {
         this.geocodingClient = geocodingClient;
         this.weatherInfoClient = weatherInfoClient;
     }
 
-    public MainPageResponse getWeatherInfo(MainPageRequest mainPageRequest){
+    public MainPageResponse getWeatherInfo(MainPageRequest mainPageRequest) {
+
         AddressDTO addressDTO = getAddressFromGPS(mainPageRequest.longitude(),
                 mainPageRequest.latitude());
 
-        WeatherApiResponse weatherApiResponse = weatherInfoClient.getWeatherInfo(
-                Grid.convertToGrid(mainPageRequest.longitude(), mainPageRequest.longitude()));
+        Grid grid = GpsToGridConverter.convertToGrid(mainPageRequest.latitude(),
+                mainPageRequest.longitude());
 
-        List<TodayWeather> todayWeathers = parseTodayWeatherInfo(
+        WeatherApiResponse weatherApiResponse = weatherInfoClient.getWeatherInfo(grid, TimeUtil.roundDownTime());
+
+        List<TodayWeather> todayWeathers = getTodayWeatherList(
                 weatherApiResponse.response().body().items().item());
-
-        List<WeekWeather> weekWeathers = parseWeekWeatherData(
+        List<WeekWeather> weekWeathers = getWeekWeatherList(
                 weatherApiResponse.response().body().items().item());
-
-        TodayWeather today = todayWeathers.getFirst();
-        WeekWeather week = weekWeathers.getFirst();
 
         return new MainPageResponse(
-                new Dashboard(week.maxTemp(), week.minTemp(), today.temp()),
+                new Dashboard(weekWeathers.getFirst().maxTemp(), weekWeathers.getFirst().minTemp(), todayWeathers.getFirst().temp()),
                 todayWeathers,
                 weekWeathers);
 
@@ -65,7 +65,7 @@ public class MainPageService {
         return new AddressDTO(structure.level1(), structure.level2());
     }
 
-    private List<TodayWeather> parseTodayWeatherInfo(List<WeatherApiResponse.Item> items) {
+    private List<TodayWeather> getTodayWeatherList(List<WeatherApiResponse.Item> items) {
 
         Map<String, Map<String, String>> groupedByTime = items.stream()
                 .filter(item -> item.fcstDate().equals(getCurrentDate()))
@@ -76,6 +76,7 @@ public class MainPageService {
                 ));
 
         return groupedByTime.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
                 .map(entry -> new TodayWeather(
                         entry.getKey(),
                         getWeatherDescription(entry.getValue().get("SKY"), entry.getValue().get("PTY")),
@@ -88,20 +89,29 @@ public class MainPageService {
         return LocalDate.now().toString().replace("-", "");
     }
 
-    private List<WeekWeather> parseWeekWeatherData(List<WeatherApiResponse.Item> items) {
-        Map<String, Map<String, String>> groupedByDate = items.stream()
+    private List<WeekWeather> getWeekWeatherList(List<WeatherApiResponse.Item> items) {
+
+        Map<String, Map<String, List<String>>> groupedByDate = items.stream()
                 .filter(item -> List.of("TMN", "TMX", "SKY", "PTY").contains(item.category()))
                 .collect(Collectors.groupingBy(
                         WeatherApiResponse.Item::fcstDate,
-                        Collectors.toMap(WeatherApiResponse.Item::category, WeatherApiResponse.Item::fcstValue)
+                        Collectors.groupingBy(
+                                WeatherApiResponse.Item::category,
+                                Collectors.mapping(WeatherApiResponse.Item::fcstValue, Collectors.toList())
+                        )
                 ));
 
         return groupedByDate.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
                 .map(entry -> new WeekWeather(
                         convertToDayOfWeek(entry.getKey()),
-                        Integer.parseInt(entry.getValue().getOrDefault("TMX", "0")),
-                        Integer.parseInt(entry.getValue().getOrDefault("TMN", "0")),
-                        getWeatherDescription(entry.getValue().get("SKY"), entry.getValue().get("PTY"))
+                        //TODO: 받아온 API 데이터에 최고기온, 최저기온 값이 없을 때 다음 페이지에 대한 API 재요청 로직이 필요함
+                        (int) Math.round(Double.parseDouble(entry.getValue().getOrDefault("TMX", List.of("0")).stream().findFirst().orElse("0"))), // TMX 처리
+                        (int) Math.round(Double.parseDouble(entry.getValue().getOrDefault("TMN", List.of("0")).stream().findFirst().orElse("0"))), // TMN 처리
+                        getWeatherDescription(
+                                getMostFrequent(entry.getValue().getOrDefault("SKY", List.of("1"))), // SKY 값 중 최빈값 선택
+                                getMostFrequent(entry.getValue().getOrDefault("PTY", List.of("0")))  // PTY 값 중 최빈값 선택
+                        )
                 ))
                 .collect(Collectors.toList());
     }
@@ -133,4 +143,12 @@ public class MainPageService {
         };
     }
 
+    private String getMostFrequent(List<String> values) {
+        return values.stream()
+                .collect(Collectors.groupingBy(v -> v, Collectors.counting()))
+                .entrySet().stream()
+                .max(Comparator.comparingLong(Map.Entry::getValue)) // 가장 많이 나온 값 선택
+                .map(Map.Entry::getKey)
+                .orElse("0");
+    }
 }
