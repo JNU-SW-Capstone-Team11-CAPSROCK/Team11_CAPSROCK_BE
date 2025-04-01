@@ -1,9 +1,14 @@
 package capsrock.mainPage.client;
 
+import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import capsrock.mainPage.config.WeatherRequestConfig;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 import capsrock.mainPage.dto.Grid;
+import capsrock.mainPage.dto.response.WeatherApiResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -20,20 +25,34 @@ public class WeatherInfoClient {
         this.restClient = RestClient.builder().build();
     }
 
-    public String getWeatherInfo(Grid grid) {
+    public WeatherApiResponse getWeatherInfo(Grid grid) {
 
-        String url = UriComponentsBuilder.fromHttpUrl(weatherRequestConfig.weatherRequestUrl())
-                .queryParam("serviceKey", weatherRequestConfig.restApiKey())
-                .queryParam("numOfRows", 1000) // 충분히 많은 데이터 요청
-                .queryParam("pageNo", 1)
-                .queryParam("base_date", getCurrentDate())
-                .queryParam("base_time", "0500") // 당일 예보 기준 시간
-                .queryParam("nx", grid.nx())
-                .queryParam("ny", grid.ny())
-                .queryParam("dataType", "JSON")
-                .toUriString();
+        var baseUrl = weatherRequestConfig.weatherRequestUrl();
+        var serviceKey = weatherRequestConfig.restApiKey();
+        var baseDate = getCurrentDate();
+        var baseTime = "0500";
+        var nx = grid.nx();
+        var ny = grid.ny();
 
-        return new RestTemplate().getForObject(url, String.class);
+        var uri = baseUrl + "?"
+                + "serviceKey=" + serviceKey
+                + "&numOfRows=1000"
+                + "&pageNo=1"
+                + "&dataType=JSON"
+                + "&base_date=" + baseDate
+                + "&base_time=" + baseTime
+                + "&nx=" + nx
+                + "&ny=" + ny;
+
+        System.out.println(uri);
+        System.out.println(restClient.get().uri(uri).retrieve().toEntity(String.class));
+
+        return restClient
+                .get()
+                .uri(uri)
+                .retrieve()
+                .toEntity(WeatherApiResponse.class)
+                .getBody();
     }
 
     private String getCurrentDate() {
