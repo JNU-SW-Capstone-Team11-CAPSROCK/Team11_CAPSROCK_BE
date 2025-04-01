@@ -8,6 +8,7 @@ import capsrock.location.grid.util.GpsToGridConverter;
 import capsrock.mainPage.client.WeatherInfoClient;
 import capsrock.mainPage.dto.Dashboard;
 import capsrock.location.grid.dto.Grid;
+import capsrock.mainPage.dto.TimeDTO;
 import capsrock.mainPage.dto.TodayWeather;
 import capsrock.mainPage.dto.WeekWeather;
 import capsrock.mainPage.dto.request.MainPageRequest;
@@ -29,8 +30,7 @@ public class MainPageService {
     private final GeocodingClient geocodingClient;
     private final WeatherInfoClient weatherInfoClient;
 
-    public MainPageService(GeocodingClient geocodingClient,
-                           WeatherInfoClient weatherInfoClient) {
+    public MainPageService(GeocodingClient geocodingClient, WeatherInfoClient weatherInfoClient) {
         this.geocodingClient = geocodingClient;
         this.weatherInfoClient = weatherInfoClient;
     }
@@ -43,14 +43,17 @@ public class MainPageService {
         Grid grid = GpsToGridConverter.convertToGrid(mainPageRequest.latitude(),
                 mainPageRequest.longitude());
 
-        WeatherApiResponse weatherApiResponse = weatherInfoClient.getWeatherInfo(grid, TimeUtil.roundDownTime());
+        TimeDTO roundedDownTime = TimeUtil.roundDownTime();
+
+        WeatherApiResponse weatherApiResponse = weatherInfoClient.getWeatherInfo(grid, roundedDownTime);
+//        System.out.println("weatherApiResponse = " + weatherApiResponse);
 
         List<Item> itemList = weatherApiResponse.response().body().items().item();
 
-        List<TodayWeather> todayWeathers = getTodayWeatherList(
-                itemList);
-        List<WeekWeather> weekWeathers = getWeekWeatherList(
-                itemList);
+//        System.out.println("itemList = " + itemList);
+
+        List<TodayWeather> todayWeathers = getNext23HoursWeatherList(itemList, roundedDownTime);
+        List<WeekWeather> weekWeathers = getWeekWeatherList(itemList);
 
         return new MainPageResponse(
                 new Dashboard(addressDTO, weekWeathers.getFirst().maxTemp(), weekWeathers.getFirst().minTemp(), todayWeathers.getFirst().temp()),
@@ -60,25 +63,51 @@ public class MainPageService {
     }
 
     private AddressDTO getAddressFromGPS(Double longitude, Double latitude) {
-        ReverseGeocodingResponse response = geocodingClient
-                .doReverseGeocoding(longitude, latitude);
+        ReverseGeocodingResponse response = geocodingClient.doReverseGeocoding(longitude, latitude);
+
+        System.out.println("responseGPS = " + response);
 
         StructureData structure = response.response().result().getFirst().structure();
 
         return new AddressDTO(structure.level1(), structure.level2());
     }
 
-    private List<TodayWeather> getTodayWeatherList(List<WeatherApiResponse.Item> items) {
+//    private List<TodayWeather> getTodayWeatherList(List<Item> items) {
+//
+//        Map<String, Map<String, String>> groupedByTime = items.stream()
+//                .filter(item -> item.fcstDate().equals(getCurrentDate()))
+//                .filter(item -> List.of("TMP", "SKY", "PTY").contains(item.category()))
+//                .collect(Collectors.groupingBy(
+//                        Item::fcstTime, Collectors.toMap(Item::category, Item::fcstValue)
+//                ));
+//
+//        System.out.println("groupedByTime = " + groupedByTime);
+//
+//        return groupedByTime.entrySet().stream()
+//                .sorted(Map.Entry.comparingByKey())
+//                .map(entry -> new TodayWeather(
+//                        entry.getKey(),
+//                        getWeatherDescription(entry.getValue().get("SKY"), entry.getValue().get("PTY")),
+//                        Integer.parseInt(entry.getValue().getOrDefault("TMP", "0"))
+//                ))
+//                .collect(Collectors.toList());
+//    }
 
-        Map<String, Map<String, String>> groupedByTime = items.stream()
-                .filter(item -> item.fcstDate().equals(getCurrentDate()))
-                .filter(item -> List.of("TMP", "SKY", "PTY").contains(item.category()))
+
+    private List<TodayWeather> getNext23HoursWeatherList(List<Item> items, TimeDTO timeDTO) {
+
+        Map<String, Map<String, String>> next23HoursWeather = items.stream()
+                .filter(item -> TimeUtil.isIn23Hours(item.fcstDate(), item.fcstTime(), timeDTO))
+                .filter(item -> List.of("TMP", "POP", "SKY", "PTY").contains(item.category()))
                 .collect(Collectors.groupingBy(
-                        WeatherApiResponse.Item::fcstTime,
-                        Collectors.toMap(WeatherApiResponse.Item::category, WeatherApiResponse.Item::fcstValue)
+                        item -> item.fcstDate() + item.fcstTime(), // 키 생성
+                        Collectors.toMap(Item::category, Item::fcstValue) // 내부 Map 생성
                 ));
 
-        return groupedByTime.entrySet().stream()
+
+//        System.out.println("next23HoursWeather = " + next23HoursWeather);
+
+        return next23HoursWeather.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> new TodayWeather(
                         entry.getKey(),
@@ -87,6 +116,8 @@ public class MainPageService {
                 ))
                 .collect(Collectors.toList());
     }
+
+
 
     private String getCurrentDate() {
         return LocalDate.now().toString().replace("-", "");
