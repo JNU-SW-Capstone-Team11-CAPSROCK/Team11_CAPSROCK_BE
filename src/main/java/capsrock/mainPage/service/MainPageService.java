@@ -4,13 +4,15 @@ import capsrock.location.geocoding.client.GeocodingClient;
 import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse.StructureData;
 import capsrock.location.geocoding.dto.service.AddressDTO;
+import capsrock.location.grid.util.GpsToGridConverter;
 import capsrock.mainPage.client.WeatherInfoClient;
 import capsrock.mainPage.dto.Dashboard;
-import capsrock.mainPage.dto.Grid;
+import capsrock.location.grid.dto.Grid;
 import capsrock.mainPage.dto.TodayWeather;
 import capsrock.mainPage.dto.WeekWeather;
 import capsrock.mainPage.dto.request.MainPageRequest;
 import capsrock.mainPage.dto.response.MainPageResponse;
+import capsrock.mainPage.util.TimeUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -36,8 +38,14 @@ public class MainPageService {
     }
 
     public MainPageResponse getWeatherInfo(MainPageRequest mainPageRequest) {
+
         AddressDTO addressDTO = getAddressFromGPS(mainPageRequest.longitude(),
                 mainPageRequest.latitude());
+
+        Grid grid = GpsToGridConverter.convertToGrid(mainPageRequest.latitude(),
+                mainPageRequest.longitude());
+
+        weatherInfoClient.getWeatherInfo(grid, TimeUtil.roundDownTime());
 
         String weatherInfo = "";
 

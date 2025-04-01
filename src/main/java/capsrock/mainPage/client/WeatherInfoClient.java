@@ -1,18 +1,16 @@
 package capsrock.mainPage.client;
 
-import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import capsrock.mainPage.config.WeatherRequestConfig;
 
+import capsrock.location.grid.dto.Grid;
+import capsrock.mainPage.dto.TimeDTO;
+import capsrock.mainPage.dto.response.WeatherApiResponse;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-
-import capsrock.mainPage.dto.Grid;
-import capsrock.mainPage.dto.response.WeatherApiResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.web.client.RestTemplate;
 
 @Component
 public class WeatherInfoClient {
@@ -25,38 +23,31 @@ public class WeatherInfoClient {
         this.restClient = RestClient.builder().build();
     }
 
-    public WeatherApiResponse getWeatherInfo(Grid grid) {
+    public WeatherApiResponse getWeatherInfo(Grid grid, TimeDTO timeDTO) {
+        
+        //apiKey에서 '=' 때문에 이렇게 수시로 인코딩 해줘야함
+        String decodedKey = weatherRequestConfig.restApiKey();
+        String encodedKey = URLEncoder.encode(decodedKey, StandardCharsets.UTF_8);
 
-        var baseUrl = weatherRequestConfig.weatherRequestUrl();
-        var serviceKey = weatherRequestConfig.restApiKey();
-        var baseDate = getCurrentDate();
-        var baseTime = "0500";
-        var nx = grid.nx();
-        var ny = grid.ny();
+        String uriString = UriComponentsBuilder
+                .fromHttpUrl(weatherRequestConfig.requestUrl())
+                .queryParam("serviceKey", encodedKey)
+                .queryParam("pageNo", 1)
+                .queryParam("numOfRows", 1000)
+                .queryParam("dataType", "JSON")
+                .queryParam("base_date", timeDTO.yyyyMMdd())
+                .queryParam("base_time", timeDTO.hhMM())
+                .queryParam("nx", grid.x())
+                .queryParam("ny", grid.y())
+                .build().toUriString();
 
-        var uri = baseUrl + "?"
-                + "serviceKey=" + serviceKey
-                + "&numOfRows=1000"
-                + "&pageNo=1"
-                + "&dataType=JSON"
-                + "&base_date=" + baseDate
-                + "&base_time=" + baseTime
-                + "&nx=" + nx
-                + "&ny=" + ny;
-
-        System.out.println(uri);
-        System.out.println(restClient.get().uri(uri).retrieve().toEntity(String.class));
+        System.out.println("uriString = " + uriString);
 
         return restClient
                 .get()
-                .uri(uri)
+                .uri(URI.create(uriString))
                 .retrieve()
-                .toEntity(WeatherApiResponse.class)
-                .getBody();
-    }
-
-    private String getCurrentDate() {
-        return LocalDate.now().toString().replace("-", "");
+                .toEntity(WeatherApiResponse.class).getBody();
     }
 
 }
