@@ -27,25 +27,17 @@ public class WeatherInfoClient {
 
     public WeatherApiResponse getWeatherInfo(Grid grid) {
 
-        var baseUrl = weatherRequestConfig.weatherRequestUrl();
-        var serviceKey = weatherRequestConfig.restApiKey();
-        var baseDate = getCurrentDate();
-        var baseTime = "0500";
-        var nx = grid.nx();
-        var ny = grid.ny();
-
-        var uri = baseUrl + "?"
-                + "serviceKey=" + serviceKey
-                + "&numOfRows=1000"
-                + "&pageNo=1"
-                + "&dataType=JSON"
-                + "&base_date=" + baseDate
-                + "&base_time=" + baseTime
-                + "&nx=" + nx
-                + "&ny=" + ny;
-
-        System.out.println(uri);
-        System.out.println(restClient.get().uri(uri).retrieve().toEntity(String.class));
+        var uri = UriComponentsBuilder.fromHttpUrl(weatherRequestConfig.weatherRequestUrl())
+                .queryParam("serviceKey", weatherRequestConfig.restApiKey())
+                .queryParam("numOfRows", 1000) // 충분히 많은 데이터 요청
+                .queryParam("pageNo", 1)
+                .queryParam("dataType", "JSON")
+                .queryParam("base_date", getCurrentDate())
+                .queryParam("base_time", "0500") // 당일 예보 기준 시간
+                .queryParam("nx", grid.nx())
+                .queryParam("ny", grid.ny())
+                .build(false)
+                .toUriString();
 
         return restClient
                 .get()
