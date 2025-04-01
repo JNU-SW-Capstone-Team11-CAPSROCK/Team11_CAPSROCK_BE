@@ -39,8 +39,7 @@ public class MainPageService {
         AddressDTO addressDTO = getAddressFromGPS(mainPageRequest.longitude(),
                 mainPageRequest.latitude());
 
-        String weatherInfo = weatherInfoClient.getWeatherInfo(
-                Grid.convertToGrid(mainPageRequest.latitude(), mainPageRequest.longitude()));
+        String weatherInfo = "";
 
         List<TodayWeather> todayWeathers = parseTodayWeatherInfo(weatherInfo);
         List<WeekWeather> weekWeathers = parseWeekWeatherData(weatherInfo);
