@@ -10,7 +10,7 @@ import capsrock.mainPage.dto.Dashboard;
 import capsrock.location.grid.dto.Grid;
 import capsrock.mainPage.dto.TimeDTO;
 import capsrock.mainPage.dto.Next23HoursWeather;
-import capsrock.mainPage.dto.WeekWeather;
+import capsrock.mainPage.dto.Next7DaysWeather;
 import capsrock.mainPage.dto.request.MainPageRequest;
 import capsrock.mainPage.dto.response.MainPageResponse;
 import capsrock.mainPage.dto.response.WeatherApiResponse;
@@ -54,13 +54,13 @@ public class MainPageService {
 //        System.out.println("itemList = " + itemList);
 
         List<Next23HoursWeather> next23HoursWeathers = getNext23HoursWeatherList(itemList, roundedDownTime);
-        List<WeekWeather> weekWeathers = getWeekWeatherList(itemList);
+        List<Next7DaysWeather> next7DaysWeathers = getNext7DaysWeatherList(itemList);
 
         return new MainPageResponse(
-                new Dashboard(addressDTO, weekWeathers.getFirst().maxTemp(),
-                        weekWeathers.getFirst().minTemp(), next23HoursWeathers.getFirst().temperature()),
+                new Dashboard(addressDTO, next7DaysWeathers.getFirst().maxTemp(),
+                        next7DaysWeathers.getFirst().minTemp(), next23HoursWeathers.getFirst().temperature()),
                 next23HoursWeathers,
-                weekWeathers);
+                next7DaysWeathers);
 
     }
 
@@ -101,7 +101,7 @@ public class MainPageService {
                 .collect(Collectors.toList());
     }
 
-    private List<WeekWeather> getWeekWeatherList(List<WeatherApiResponse.Item> items) {
+    private List<Next7DaysWeather> getNext7DaysWeatherList(List<Item> items) {
 
         Map<String, Map<String, List<String>>> groupedByDate = items.stream()
                 .filter(item -> List.of("TMN", "TMX", "SKY", "PTY").contains(item.category()))
@@ -116,9 +116,10 @@ public class MainPageService {
 
         return groupedByDate.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
-                .map(entry -> new WeekWeather(
+                .map(entry -> new Next7DaysWeather(
                         convertToDayOfWeek(entry.getKey()),
                         //TODO: 받아온 API 데이터에 최고기온, 최저기온 값이 없을 때 다음 페이지에 대한 API 재요청 로직이 필요함
+                        //TODO: 아니 중기예보 같은거 없나?? 이거 다른 api로 쉽게 해결할걸 사서 고생하는 느낌인데
                         (int) Math.round(Double.parseDouble(
                                 entry.getValue().getOrDefault("TMX", List.of("0")).stream()
                                         .findFirst().orElse("0"))), // TMX 처리
