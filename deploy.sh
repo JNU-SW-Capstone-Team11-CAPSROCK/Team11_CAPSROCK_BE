@@ -11,8 +11,7 @@ echo "⚙️ Gradle Build..."
 # 기존 컨테이너 중지 및 삭제 (있을 경우만)
 if [ "$(docker ps -aq -f name=capsrock_app)" ]; then
     echo "🛑 기존 컨테이너 중지 및 삭제..."
-    docker stop capsrock_app
-    docker rm capsrock_app
+    docker rm -f capsrock_app
 fi
 
 # 새 이미지 빌드
@@ -24,6 +23,6 @@ docker rmi $(docker images -f "dangling=true" -q)
 
 # 새 컨테이너 실행
 echo "🚀 Running new container..."
-docker run -d --name capsrock_app -p 8080:8080 capsrock-be
+docker run -d --name capsrock_app -p 8080:8080 -v /volume1/docker/deploy:/app capsrock-be
 
 echo "✅ 배포 완료!"
