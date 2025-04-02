@@ -1,6 +1,6 @@
 package capsrock.mainPage.dto;
 
-public record WeekWeather(
+public record Next7DaysWeather(
         String dayOfWeek,
         int maxTemp,
         int minTemp,
