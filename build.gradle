@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.1'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group = 'sw.capstone.11-BE'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+
+    //csv 파일에 관한 의존성
+    implementation 'com.opencsv:opencsv:5.9'
+
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+
+
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
