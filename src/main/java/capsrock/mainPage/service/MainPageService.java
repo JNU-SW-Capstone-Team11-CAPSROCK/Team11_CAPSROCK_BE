@@ -23,7 +23,7 @@ public class MainPageService {
     }
 
 
-    public MainPageResponse getMainPage(MainPageRequest mainPageRequest) {
+    public void getMainPage(MainPageRequest mainPageRequest) {
 
         AddressDTO addressDTO = getAddressFromGPS(mainPageRequest.longitude(),
                 mainPageRequest.latitude());

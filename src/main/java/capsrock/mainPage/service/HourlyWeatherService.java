@@ -48,7 +48,6 @@ public class HourlyWeatherService {
                     );
                 })
                 .sorted(Comparator.comparing(Next23HoursWeather::time))
-                .limit(23)
                 .toList();
 
         return next23HoursWeatherList;

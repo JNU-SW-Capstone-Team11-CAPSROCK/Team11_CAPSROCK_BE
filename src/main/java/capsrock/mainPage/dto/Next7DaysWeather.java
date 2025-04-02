@@ -1,8 +1,12 @@
 package capsrock.mainPage.dto;
 
 public record Next7DaysWeather(
+        String day,
         String dayOfWeek,
-        int maxTemp,
-        int minTemp,
-        String weather) {
+        Double maxTemp,
+        Double minTemp,
+        Integer weather,
+        String rainOrSnowPossibility,
+        Double rainOrSnowAmount
+) {
 }
