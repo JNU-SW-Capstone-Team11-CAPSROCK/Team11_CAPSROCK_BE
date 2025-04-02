@@ -1,7 +1,6 @@
 package capsrock.mainPage.controller;
 
 import capsrock.mainPage.dto.request.MainPageRequest;
-import capsrock.mainPage.dto.response.MainPageResponse;
 import capsrock.mainPage.service.MainPageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +20,11 @@ public class MainPageController {
     }
 
     @GetMapping
-    public ResponseEntity<MainPageResponse> mainPage(
+    public ResponseEntity<?> mainPage(
             @RequestParam("latitude") Double latitude,
             @RequestParam("longitude") Double longitude){
 
         MainPageRequest mainPageRequest = new MainPageRequest(latitude, longitude);
-        return new ResponseEntity<>(mainPageService.getWeatherInfo(mainPageRequest), HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

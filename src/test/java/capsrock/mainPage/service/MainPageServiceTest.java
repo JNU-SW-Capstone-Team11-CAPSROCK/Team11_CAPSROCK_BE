@@ -13,8 +13,7 @@ class MainPageServiceTest {
 
 
     @Test
-    void getWeatherInfo() {
-        var mainpageResponse = mainPageService.getWeatherInfo(new MainPageRequest(35.0759421018392, 126.774759454703));
-        System.out.println("mainpageResponse = " + mainpageResponse);
+    void getHourlyWeather() {
+        mainPageService.getHourlyWeather(new MainPageRequest(35.0759421018392, 126.774759454703));
     }
 }

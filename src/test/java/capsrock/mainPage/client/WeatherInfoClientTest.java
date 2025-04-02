@@ -1,8 +1,5 @@
 package capsrock.mainPage.client;
 
-import capsrock.mainPage.util.TimeUtil;
-
-import capsrock.location.grid.dto.Grid;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import org.junit.jupiter.api.DisplayName;
@@ -20,9 +17,9 @@ public class WeatherInfoClientTest {
 
     @Test
     @DisplayName("날씨 정보")
-    void getWeatherInfo() {
+    void getHourlyWeatherResponse() {
         System.out.println("weatherInfoClient.getWeatherInfo(new Grid(60, 125)) = "
-                + weatherInfoClient.getWeatherInfo(new Grid(60, 125), TimeUtil.roundDownTime()));
+                + weatherInfoClient.getHourlyWeatherResponse(35.0759421018392, 126.774759454703));
     }
 
     @Test
