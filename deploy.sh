@@ -8,10 +8,12 @@ git pull origin main || { echo "❌ Git Pull 실패"; exit 1; }
 echo "⚙️ Gradle Build..."
 ./gradlew build || { echo "❌ Gradle Build 실패"; exit 1; }
 
-# 기존 컨테이너 중지 및 삭제
-echo "🛑 Stopping old container..."
-docker stop capsrock-app
-docker rm capsrock-app
+# 기존 컨테이너 중지 및 삭제 (있을 경우만)
+if [ "$(docker ps -aq -f name=capsrock_app)" ]; then
+    echo "🛑 기존 컨테이너 중지 및 삭제..."
+    docker stop capsrock_app
+    docker rm capsrock_app
+fi
 
 # 새 이미지 빌드
 echo "🐳 Building new Docker image..."
@@ -22,6 +24,6 @@ docker rmi $(docker images -f "dangling=true" -q)
 
 # 새 컨테이너 실행
 echo "🚀 Running new container..."
-docker run -d --name capsrock-app -p 8080:8080 capsrock-be
+docker run -d --name capsrock_app -p 8080:8080 capsrock-be
 
 echo "✅ 배포 완료!"
