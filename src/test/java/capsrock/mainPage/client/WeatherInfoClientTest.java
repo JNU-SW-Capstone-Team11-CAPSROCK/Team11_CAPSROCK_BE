@@ -28,4 +28,12 @@ public class WeatherInfoClientTest {
         String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"));
         System.out.println("now = " + now);
     }
+
+    @Test
+    void getDailyWeather() {
+        System.out.println(
+                "weatherInfoClient.getDailyWeatherResponse(35.0759421018392, 126.774759454703) = "
+                        + weatherInfoClient.getDailyWeatherResponse(35.0759421018392,
+                        126.774759454703));
+    }
 }

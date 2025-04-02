@@ -1,5 +1,8 @@
 package capsrock.mainPage.util;
 
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -23,5 +26,30 @@ public class TimeUtil {
         // 변환된 시간 문자열 반환
         return kstDateTime.format(formatter);
     }
+
+    public static String convertUnixTimeStamp(Long unixTime) {
+        // UTC 기준의 ZonedDateTime 생성
+        ZonedDateTime utcDateTime = Instant.ofEpochSecond(unixTime).atZone(ZoneId.of("UTC"));
+
+        // 한국 시간(KST, UTC+9)으로 변환
+        ZonedDateTime kstDateTime = utcDateTime.withZoneSameInstant(ZoneId.of("Asia/Seoul"));
+
+        // 변환된 시간 문자열 반환
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return kstDateTime.format(formatter);
+    }
+
+
+    public static String getDayOfWeek(String timeStamp) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDate date = LocalDate.parse(timeStamp, formatter);
+
+        // LocalDate 객체에서 요일을 구하고, 요일 이름을 반환
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        return dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.KOREAN);
+    }
+
+
+
 }
 

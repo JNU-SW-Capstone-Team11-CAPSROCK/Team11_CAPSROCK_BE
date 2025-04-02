@@ -1,4 +1,4 @@
-package capsrock.location.geocoding.dto.service;
+package capsrock.geocoding.dto.service;
 
 public record AddressDTO(
         String level1,

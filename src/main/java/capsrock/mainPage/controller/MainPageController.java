@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -20,11 +19,7 @@ public class MainPageController {
     }
 
     @GetMapping
-    public ResponseEntity<?> mainPage(
-            @RequestParam("latitude") Double latitude,
-            @RequestParam("longitude") Double longitude){
-
-        MainPageRequest mainPageRequest = new MainPageRequest(latitude, longitude);
-        return new ResponseEntity<>(HttpStatus.OK);
+    public ResponseEntity<?> mainPage(MainPageRequest mainPageRequest){
+        return new ResponseEntity<>(mainPageService.getMainPage(mainPageRequest), HttpStatus.OK);
     }
 }
