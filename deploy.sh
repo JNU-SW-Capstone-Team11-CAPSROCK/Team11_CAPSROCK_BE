@@ -1,32 +1,27 @@
 #!/bin/bash
-# 프로젝트 경로 설정
-PROJECT_PATH="/volume1/docker/Team11_CAPSROCK_BE"
-DEPLOY_PATH="/volume1/docker/deploy"
+
+# 최신 코드 가져오기
+echo "🔄 Git Pull..."
+git pull origin main || { echo "❌ Git Pull 실패"; exit 1; }
+
+# 애플리케이션 빌드
+echo "⚙️ Gradle Build..."
+./gradlew build || { echo "❌ Gradle Build 실패"; exit 1; }
 
 # 기존 컨테이너 중지 및 삭제
-CONTAINER_NAME="capsrock_app"
-EXISTING_CONTAINER=$(docker ps -q -f name=$CONTAINER_NAME)
+echo "🛑 Stopping old container..."
+docker stop capsrock-app
+docker rm capsrock-app
 
-if [ ! -z "$EXISTING_CONTAINER" ]; then
-  echo "기존 컨테이너 종료 중..."
-  docker stop $CONTAINER_NAME
-  docker rm $CONTAINER_NAME
-fi
+# 새 이미지 빌드
+echo "🐳 Building new Docker image..."
+docker build -t capsrock-be . || { echo "❌ Docker Build 실패"; exit 1; }
 
-# Docker 이미지 빌드
-echo "새로운 Docker 이미지 빌드 중..."
-cd $PROJECT_PATH || exit
-docker build -t capsrock-image .
+# 사용되지 않는 이미지 정리
+docker rmi $(docker images -f "dangling=true" -q)
 
 # 새 컨테이너 실행
-echo "새로운 컨테이너 실행 중..."
-docker run -d \
-  --name $CONTAINER_NAME \
-  -p 8080:8080 \
-  -v $DEPLOY_PATH:/app \
-  -e SPRING_PROFILES_ACTIVE=prod \
-  capsrock-image
+echo "🚀 Running new container..."
+docker run -d --name capsrock-app -p 8080:8080 capsrock-be
 
-# 실행된 컨테이너 확인
-echo "배포 완료! 실행된 컨테이너 확인:"
-docker ps -f name=$CONTAINER_NAME
+echo "✅ 배포 완료!"
