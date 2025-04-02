@@ -9,7 +9,7 @@ import capsrock.mainPage.client.WeatherInfoClient;
 import capsrock.mainPage.dto.Dashboard;
 import capsrock.location.grid.dto.Grid;
 import capsrock.mainPage.dto.TimeDTO;
-import capsrock.mainPage.dto.TodayWeather;
+import capsrock.mainPage.dto.Next23HoursWeather;
 import capsrock.mainPage.dto.WeekWeather;
 import capsrock.mainPage.dto.request.MainPageRequest;
 import capsrock.mainPage.dto.response.MainPageResponse;
@@ -45,19 +45,21 @@ public class MainPageService {
 
         TimeDTO roundedDownTime = TimeUtil.roundDownTime();
 
-        WeatherApiResponse weatherApiResponse = weatherInfoClient.getWeatherInfo(grid, roundedDownTime);
+        WeatherApiResponse weatherApiResponse = weatherInfoClient.getWeatherInfo(grid,
+                roundedDownTime);
 //        System.out.println("weatherApiResponse = " + weatherApiResponse);
 
         List<Item> itemList = weatherApiResponse.response().body().items().item();
 
 //        System.out.println("itemList = " + itemList);
 
-        List<TodayWeather> todayWeathers = getNext23HoursWeatherList(itemList, roundedDownTime);
+        List<Next23HoursWeather> next23HoursWeathers = getNext23HoursWeatherList(itemList, roundedDownTime);
         List<WeekWeather> weekWeathers = getWeekWeatherList(itemList);
 
         return new MainPageResponse(
-                new Dashboard(addressDTO, weekWeathers.getFirst().maxTemp(), weekWeathers.getFirst().minTemp(), todayWeathers.getFirst().temp()),
-                todayWeathers,
+                new Dashboard(addressDTO, weekWeathers.getFirst().maxTemp(),
+                        weekWeathers.getFirst().minTemp(), next23HoursWeathers.getFirst().temperature()),
+                next23HoursWeathers,
                 weekWeathers);
 
     }
@@ -72,29 +74,8 @@ public class MainPageService {
         return new AddressDTO(structure.level1(), structure.level2());
     }
 
-//    private List<TodayWeather> getTodayWeatherList(List<Item> items) {
-//
-//        Map<String, Map<String, String>> groupedByTime = items.stream()
-//                .filter(item -> item.fcstDate().equals(getCurrentDate()))
-//                .filter(item -> List.of("TMP", "SKY", "PTY").contains(item.category()))
-//                .collect(Collectors.groupingBy(
-//                        Item::fcstTime, Collectors.toMap(Item::category, Item::fcstValue)
-//                ));
-//
-//        System.out.println("groupedByTime = " + groupedByTime);
-//
-//        return groupedByTime.entrySet().stream()
-//                .sorted(Map.Entry.comparingByKey())
-//                .map(entry -> new TodayWeather(
-//                        entry.getKey(),
-//                        getWeatherDescription(entry.getValue().get("SKY"), entry.getValue().get("PTY")),
-//                        Integer.parseInt(entry.getValue().getOrDefault("TMP", "0"))
-//                ))
-//                .collect(Collectors.toList());
-//    }
 
-
-    private List<TodayWeather> getNext23HoursWeatherList(List<Item> items, TimeDTO timeDTO) {
+    private List<Next23HoursWeather> getNext23HoursWeatherList(List<Item> items, TimeDTO timeDTO) {
 
         Map<String, Map<String, String>> next23HoursWeather = items.stream()
                 .filter(item -> TimeUtil.isIn23Hours(item.fcstDate(), item.fcstTime(), timeDTO))
@@ -104,23 +85,20 @@ public class MainPageService {
                         Collectors.toMap(Item::category, Item::fcstValue) // 내부 Map 생성
                 ));
 
-
 //        System.out.println("next23HoursWeather = " + next23HoursWeather);
 
         return next23HoursWeather.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
-                .map(entry -> new TodayWeather(
+                .map(entry ->
+                        new Next23HoursWeather(
                         entry.getKey(),
-                        getWeatherDescription(entry.getValue().get("SKY"), entry.getValue().get("PTY")),
-                        Integer.parseInt(entry.getValue().getOrDefault("TMP", "0"))
-                ))
+                        getWeatherDescription(entry.getValue().get("SKY"),
+                                entry.getValue().get("PTY")),
+                        Integer.parseInt(entry.getValue().get("TMP")),
+                        entry.getValue().get("POP") + "%",
+                        entry.getValue().get("PTY"))
+                )
                 .collect(Collectors.toList());
-    }
-
-
-
-    private String getCurrentDate() {
-        return LocalDate.now().toString().replace("-", "");
     }
 
     private List<WeekWeather> getWeekWeatherList(List<WeatherApiResponse.Item> items) {
@@ -131,7 +109,8 @@ public class MainPageService {
                         WeatherApiResponse.Item::fcstDate,
                         Collectors.groupingBy(
                                 WeatherApiResponse.Item::category,
-                                Collectors.mapping(WeatherApiResponse.Item::fcstValue, Collectors.toList())
+                                Collectors.mapping(WeatherApiResponse.Item::fcstValue,
+                                        Collectors.toList())
                         )
                 ));
 
@@ -140,11 +119,17 @@ public class MainPageService {
                 .map(entry -> new WeekWeather(
                         convertToDayOfWeek(entry.getKey()),
                         //TODO: 받아온 API 데이터에 최고기온, 최저기온 값이 없을 때 다음 페이지에 대한 API 재요청 로직이 필요함
-                        (int) Math.round(Double.parseDouble(entry.getValue().getOrDefault("TMX", List.of("0")).stream().findFirst().orElse("0"))), // TMX 처리
-                        (int) Math.round(Double.parseDouble(entry.getValue().getOrDefault("TMN", List.of("0")).stream().findFirst().orElse("0"))), // TMN 처리
+                        (int) Math.round(Double.parseDouble(
+                                entry.getValue().getOrDefault("TMX", List.of("0")).stream()
+                                        .findFirst().orElse("0"))), // TMX 처리
+                        (int) Math.round(Double.parseDouble(
+                                entry.getValue().getOrDefault("TMN", List.of("0")).stream()
+                                        .findFirst().orElse("0"))), // TMN 처리
                         getWeatherDescription(
-                                getMostFrequent(entry.getValue().getOrDefault("SKY", List.of("1"))), // SKY 값 중 최빈값 선택
-                                getMostFrequent(entry.getValue().getOrDefault("PTY", List.of("0")))  // PTY 값 중 최빈값 선택
+                                getMostFrequent(entry.getValue().getOrDefault("SKY", List.of("1"))),
+                                // SKY 값 중 최빈값 선택
+                                getMostFrequent(entry.getValue().getOrDefault("PTY", List.of("0")))
+                                // PTY 값 중 최빈값 선택
                         )
                 ))
                 .collect(Collectors.toList());
@@ -159,7 +144,7 @@ public class MainPageService {
         return dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.KOREAN);
     }
 
-    private static String getWeatherDescription(String sky, String pty) {
+    private String getWeatherDescription(String sky, String pty) {
         if (pty != null && !pty.equals("0")) {
             return switch (pty) {
                 case "1" -> "없음";
