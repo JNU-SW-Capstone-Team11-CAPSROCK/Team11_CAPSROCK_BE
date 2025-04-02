@@ -1,7 +1,7 @@
 package capsrock.mainPage.service;
 
 import capsrock.mainPage.client.WeatherInfoClient;
-import capsrock.mainPage.dto.Next23HoursWeather;
+import capsrock.mainPage.dto.service.Next23HoursWeather;
 import capsrock.mainPage.dto.response.HourlyWeatherResponse;
 import capsrock.mainPage.dto.response.HourlyWeatherResponse.Rain;
 import capsrock.mainPage.dto.response.HourlyWeatherResponse.Snow;

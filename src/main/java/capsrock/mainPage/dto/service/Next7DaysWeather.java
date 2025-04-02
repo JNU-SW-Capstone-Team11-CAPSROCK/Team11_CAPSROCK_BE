@@ -1,4 +1,4 @@
-package capsrock.mainPage.dto;
+package capsrock.mainPage.dto.service;
 
 public record Next7DaysWeather(
         String day,

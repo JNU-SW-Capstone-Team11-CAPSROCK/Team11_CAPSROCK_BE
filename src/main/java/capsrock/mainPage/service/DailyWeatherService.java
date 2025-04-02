@@ -1,14 +1,10 @@
 package capsrock.mainPage.service;
 
 import capsrock.mainPage.client.WeatherInfoClient;
-import capsrock.mainPage.dto.Next23HoursWeather;
-import capsrock.mainPage.dto.Next7DaysWeather;
+import capsrock.mainPage.dto.service.Next7DaysWeather;
 import capsrock.mainPage.dto.response.DailyWeatherResponse;
-import capsrock.mainPage.dto.response.HourlyWeatherResponse.Rain;
-import capsrock.mainPage.dto.response.HourlyWeatherResponse.Snow;
 import capsrock.mainPage.enums.WeatherEnum;
 import capsrock.mainPage.util.TimeUtil;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;

@@ -1,9 +1,9 @@
-package capsrock.mainPage.dto;
+package capsrock.mainPage.dto.service;
 
 public record Next23HoursWeather(
         String time,
         Integer weather,
-        Double temperature,
+        Double temp,
         String rainOrSnowPossibility,
         Double rainOrSnowAmount
 ) { }

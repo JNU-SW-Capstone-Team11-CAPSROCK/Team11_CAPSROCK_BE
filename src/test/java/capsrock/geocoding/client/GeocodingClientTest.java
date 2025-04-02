@@ -1,4 +1,4 @@
-package capsrock.location.geocoding.client;
+package capsrock.geocoding.client;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +11,6 @@ class GeocodingClientTest {
 
     @Test
     void doReverseGeocoding() {
-        geocodingClient.doReverseGeocoding(126.9071166, 35.1755091);
+        geocodingClient.doReverseGeocoding(126.9779692, 37.566535);
     }
 }
