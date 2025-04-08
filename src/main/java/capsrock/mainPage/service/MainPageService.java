@@ -1,9 +1,9 @@
 package capsrock.mainPage.service;
 
-import capsrock.geocoding.client.GeocodingClient;
 import capsrock.geocoding.dto.response.ReverseGeocodingResponse;
 import capsrock.geocoding.dto.response.ReverseGeocodingResponse.StructureData;
 import capsrock.geocoding.dto.service.AddressDTO;
+import capsrock.location.geocoding.service.GeocodingService;
 import capsrock.mainPage.dto.service.Dashboard;
 import capsrock.mainPage.dto.service.Next23HoursWeather;
 import capsrock.mainPage.dto.service.Next7DaysWeather;
@@ -15,15 +15,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class MainPageService {
 
-    private final GeocodingClient geocodingClient;
     private final HourlyWeatherService hourlyWeatherService;
     private final DailyWeatherService dailyWeatherService;
+    private final GeocodingService geocodingService;
 
-    public MainPageService(GeocodingClient geocodingClient,
-            HourlyWeatherService hourlyWeatherService, DailyWeatherService dailyWeatherService) {
-        this.geocodingClient = geocodingClient;
+    public MainPageService(HourlyWeatherService hourlyWeatherService,
+            DailyWeatherService dailyWeatherService, GeocodingService geocodingService) {
         this.hourlyWeatherService = hourlyWeatherService;
         this.dailyWeatherService = dailyWeatherService;
+        this.geocodingService = geocodingService;
     }
 
 
@@ -48,7 +48,8 @@ public class MainPageService {
 
     private AddressDTO getAddressFromGPS(Double longitude, Double latitude) {
 
-        ReverseGeocodingResponse response = geocodingClient.doReverseGeocoding(longitude, latitude);
+        ReverseGeocodingResponse response = geocodingService.doReverseGeocoding(longitude,
+                latitude);
         StructureData structure = response.response().result().getFirst().structure();
 
         return new AddressDTO(structure.level1(), structure.level2());
