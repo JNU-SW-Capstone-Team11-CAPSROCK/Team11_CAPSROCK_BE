@@ -19,7 +19,7 @@ public class ClothingFeedbackController {
     @PostMapping
     public ResponseEntity<Void> receiveFeedback(/*@LoginMember */MemberInfoDTO memberInfoDTO,
             ClothingFeedbackRequest clothingFeedbackRequest) {
-        clothingFeedbackService.processFeedback(memberInfoDTO, clothingFeedbackRequest);
+//        clothingFeedbackService.processFeedback(memberInfoDTO, clothingFeedbackRequest);
         return ResponseEntity.ok().build();
     }
 

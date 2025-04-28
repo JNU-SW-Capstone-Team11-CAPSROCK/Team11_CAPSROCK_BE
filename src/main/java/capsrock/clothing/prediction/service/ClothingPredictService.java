@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class ClothingPredictService {
 
-
     private final DailyWeatherService dailyWeatherService;
     private final ClothingGeminiClient clothingGeminiClient;
 

@@ -75,8 +75,4 @@ class ClothingGeminiClientTest {
 
         client.getPrediction(request);
     }
-
-    @Test
-    void testGetPrediction() {
-    }
 }
