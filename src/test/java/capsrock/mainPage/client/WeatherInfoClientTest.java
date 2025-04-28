@@ -34,6 +34,6 @@ public class WeatherInfoClientTest {
         System.out.println(
                 "weatherInfoClient.getDailyWeatherResponse(35.0759421018392, 126.774759454703) = "
                         + weatherInfoClient.getDailyWeatherResponse(35.0759421018392,
-                        126.774759454703));
+                        126.774759454703, 7));
     }
 }

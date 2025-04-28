@@ -1,7 +1,7 @@
 package capsrock.mainPage.service;
 
 import capsrock.mainPage.client.WeatherInfoClient;
-import capsrock.mainPage.dto.service.Next7DaysWeather;
+import capsrock.mainPage.dto.service.NextFewDaysWeather;
 import capsrock.mainPage.dto.response.DailyWeatherResponse;
 import capsrock.mainPage.enums.WeatherEnum;
 import capsrock.mainPage.util.TimeUtil;
@@ -19,18 +19,18 @@ public class DailyWeatherService {
         this.weatherInfoClient = weatherInfoClient;
     }
 
-    public List<Next7DaysWeather> getNext7DaysWeather(Double latitude, Double longitude) {
+    public List<NextFewDaysWeather> getNextFewDaysWeather(Double latitude, Double longitude, Integer days) {
 //        List<Next7DaysWeather> next7DaysWeatherList = new ArrayList<>();
 
         DailyWeatherResponse dailyWeatherResponse = weatherInfoClient.getDailyWeatherResponse(
-                latitude, longitude);
+                latitude, longitude, days);
 
 //        System.out.println("dailyWeatherResponse = " + dailyWeatherResponse);
 
-        List<Next7DaysWeather> next7DaysWeatherList = dailyWeatherResponse.list().stream()
+        List<NextFewDaysWeather> nextFewDaysWeatherList = dailyWeatherResponse.list().stream()
                 .map(data -> {
                     String ts = TimeUtil.convertUnixTimeStamp(data.dt());
-                    return new Next7DaysWeather(
+                    return new NextFewDaysWeather(
                             ts,
                             TimeUtil.getDayOfWeek(ts),
                             data.temp().max(),
@@ -41,10 +41,10 @@ public class DailyWeatherService {
                                     .orElse(Optional.ofNullable(data.snow()).orElse(0.0))
                     );
                 })
-                .sorted(Comparator.comparing(Next7DaysWeather::day))
+                .sorted(Comparator.comparing(NextFewDaysWeather::day))
                 .toList();
 
-        return next7DaysWeatherList;
+        return nextFewDaysWeatherList;
     }
 
 }

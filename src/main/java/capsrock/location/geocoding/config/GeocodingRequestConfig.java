@@ -1,4 +1,4 @@
-package capsrock.geocoding.config;
+package capsrock.location.geocoding.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
