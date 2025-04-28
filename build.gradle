@@ -25,17 +25,14 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'com.google.genai:google-genai:0.5.0'
 
-    //csv 파일에 관한 의존성
-    implementation 'com.opencsv:opencsv:5.9'
-
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
-
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.module/jackson-module-jsonSchema
+    implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.18.3'
 
     runtimeOnly 'com.mysql:mysql-connector-j'
+
 
 }
 

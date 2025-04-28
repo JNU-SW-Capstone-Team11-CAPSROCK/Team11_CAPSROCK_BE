@@ -1,6 +1,6 @@
 package capsrock.mainPage.dto.service;
 
-public record Next7DaysWeather(
+public record NextFewDaysWeather(
         String day,
         String dayOfWeek,
         Double maxTemp,

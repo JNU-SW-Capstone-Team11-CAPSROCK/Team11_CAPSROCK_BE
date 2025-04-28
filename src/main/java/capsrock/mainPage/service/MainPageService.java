@@ -1,12 +1,12 @@
 package capsrock.mainPage.service;
 
-import capsrock.geocoding.dto.response.ReverseGeocodingResponse;
-import capsrock.geocoding.dto.response.ReverseGeocodingResponse.StructureData;
-import capsrock.geocoding.dto.service.AddressDTO;
+import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
+import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse.StructureData;
+import capsrock.location.geocoding.dto.service.AddressDTO;
 import capsrock.location.geocoding.service.GeocodingService;
 import capsrock.mainPage.dto.service.Dashboard;
 import capsrock.mainPage.dto.service.Next23HoursWeather;
-import capsrock.mainPage.dto.service.Next7DaysWeather;
+import capsrock.mainPage.dto.service.NextFewDaysWeather;
 import capsrock.mainPage.dto.request.MainPageRequest;
 import capsrock.mainPage.dto.response.MainPageResponse;
 import java.util.List;
@@ -35,8 +35,8 @@ public class MainPageService {
         List<Next23HoursWeather> next23HoursWeatherList = hourlyWeatherService.getHourlyWeather(
                 mainPageRequest.latitude(), mainPageRequest.longitude());
 
-        List<Next7DaysWeather> next7DaysWeatherList = dailyWeatherService.getNext7DaysWeather(
-                mainPageRequest.latitude(), mainPageRequest.longitude());
+        List<NextFewDaysWeather> next7DaysWeatherList = dailyWeatherService.getNextFewDaysWeather(
+                mainPageRequest.latitude(), mainPageRequest.longitude(), 7);
 
         Dashboard dashboard = new Dashboard(addressDTO, next7DaysWeatherList.getFirst().maxTemp(),
                 next7DaysWeatherList.getFirst().minTemp(),

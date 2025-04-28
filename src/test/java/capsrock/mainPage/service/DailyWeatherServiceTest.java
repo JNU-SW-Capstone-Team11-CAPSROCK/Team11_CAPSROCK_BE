@@ -1,7 +1,5 @@
 package capsrock.mainPage.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,10 +13,10 @@ class DailyWeatherServiceTest {
 
 
     @Test
-    void getNext7DaysWeather() {
+    void getNextFewDaysWeather() {
         System.out.println(
                 "dailyWeatherService.getNext7DaysWeather(35.0759421018392, 126.774759454703) = "
-                        + dailyWeatherService.getNext7DaysWeather(35.0759421018392,
-                        126.774759454703));
+                        + dailyWeatherService.getNextFewDaysWeather(35.0759421018392,
+                        126.774759454703, 7));
     }
 }

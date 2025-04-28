@@ -1,7 +1,7 @@
-package capsrock.geocoding.client;
+package capsrock.location.geocoding.client;
 
-import capsrock.geocoding.config.GeocodingRequestConfig;
-import capsrock.geocoding.dto.response.ReverseGeocodingResponse;
+import capsrock.location.geocoding.config.GeocodingRequestConfig;
+import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;

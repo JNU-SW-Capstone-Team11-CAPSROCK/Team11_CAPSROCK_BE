@@ -45,7 +45,8 @@ public class WeatherInfoClient {
                 .toEntity(HourlyWeatherResponse.class).getBody();
     }
 
-    public DailyWeatherResponse getDailyWeatherResponse(Double latitude, Double longitude) {
+    public DailyWeatherResponse getDailyWeatherResponse(Double latitude, Double longitude, Integer days) {
+
         String httpUrl = weatherRequestConfig.baseRequestUrl() + weatherRequestConfig.forecastPath()
                 + weatherRequestConfig.dailyPath();
 
@@ -55,7 +56,7 @@ public class WeatherInfoClient {
                 .queryParam("lon", longitude)
                 .queryParam("appid", weatherRequestConfig.restApiKey())
                 .queryParam("mode", "JSON")
-                .queryParam("cnt", "7")
+                .queryParam("cnt", days)
                 .queryParam("lang", "kr")
                 .queryParam("units", "metric")
                 .build().toUriString();

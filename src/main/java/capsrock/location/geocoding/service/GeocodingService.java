@@ -1,7 +1,7 @@
 package capsrock.location.geocoding.service;
 
-import capsrock.geocoding.client.GeocodingClient;
-import capsrock.geocoding.dto.response.ReverseGeocodingResponse;
+import capsrock.location.geocoding.client.GeocodingClient;
+import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import org.springframework.stereotype.Service;
 
 @Service
