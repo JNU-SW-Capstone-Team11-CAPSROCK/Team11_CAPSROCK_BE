@@ -7,15 +7,15 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ClothingFeedbackService {
+//
+//
+//    private final MemberService memberService;
+//
+//    public ClothingFeedbackService(MemberService memberService) {
+//        this.memberService = memberService;
+//    }
+//
+//    public void processFeedback(MemberInfoDTO memberInfoDTO, ClothingFeedbackRequest clothingFeedbackRequest) {
+//        memberService.saveClothingFeedback(memberInfoDTO.memberId(), clothingFeedbackRequest);
 
-
-    private final MemberService memberService;
-
-    public ClothingFeedbackService(MemberService memberService) {
-        this.memberService = memberService;
-    }
-
-    public void processFeedback(MemberInfoDTO memberInfoDTO, ClothingFeedbackRequest clothingFeedbackRequest) {
-        memberService.saveClothingFeedback(memberInfoDTO.memberId(), clothingFeedbackRequest);
-    }
 }
