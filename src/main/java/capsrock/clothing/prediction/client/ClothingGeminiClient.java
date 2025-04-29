@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.genai.types.Content;
 import com.google.genai.types.GenerateContentConfig;
-import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.Part;
 import com.google.genai.types.Schema;
 import java.util.Arrays;
@@ -23,24 +22,30 @@ import com.google.genai.Client;
 
 @Component
 public class ClothingGeminiClient {
-    //async
 
-    private final GeminiPredictionRequestConfig geminiPredictionRequestConfig;
+    //async
     private final Client geminiClient;
+    private final ObjectMapper objectMapper;
+    private final GeminiPredictionRequestConfig geminiPredictionRequestConfig;
     private final ClothingPredictionResponseSchemaFactory clothingPredictionResponseSchemaFactory;
 
     ClothingGeminiClient(GeminiPredictionRequestConfig geminiPredictionRequestConfig,
             ClothingPredictionResponseSchemaFactory clothingPredictionResponseSchemaFactory) {
+
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
         this.geminiPredictionRequestConfig = geminiPredictionRequestConfig;
         this.clothingPredictionResponseSchemaFactory = clothingPredictionResponseSchemaFactory;
-        this.geminiClient = Client.builder().apiKey(this.geminiPredictionRequestConfig.apiKey())
+        this.geminiClient = Client
+                .builder()
+                .apiKey(this.geminiPredictionRequestConfig.apiKey())
                 .build();
     }
 
-    public void getPrediction(ClothingPredictionRequest requestDTO) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    public CompletableFuture<ClothingPredictionResponse> getPrediction(
+            ClothingPredictionRequest requestDTO) throws JsonProcessingException {
         String jsonString = objectMapper.writeValueAsString(requestDTO);
 
         List<Content> contents = Arrays.asList(
@@ -52,24 +57,19 @@ public class ClothingGeminiClient {
                 clothingPredictionResponseSchemaFactory.getClothingPredictionResponseSchema()
         );
 
-        CompletableFuture<GenerateContentResponse> responseFuture =
-                geminiClient.async.models.generateContent(
-                        GeminiModel.PRO_2_5_PRO_EXP_03_25.getModelName(), contents, config
-                );
-
-        responseFuture
-                .thenAccept(
-                        response -> {
-                            try {
-                                //ClothingPredictionResponse predictionResponse =
-                                //        objectMapper.readValue(response.text(), ClothingPredictionResponse.class);
-
-                                System.out.println(response.text());
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                .join();
+        return geminiClient.async.models.generateContent(
+                        GeminiModel.PRO_2_5_PRO_EXP_03_25.getModelName(),
+                        contents,
+                        config
+                )
+                .thenApply(response -> {
+                    try {
+                        return objectMapper.readValue(response.text(),
+                                ClothingPredictionResponse.class);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
     }
 

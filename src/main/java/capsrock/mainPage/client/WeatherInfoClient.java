@@ -5,20 +5,17 @@ import capsrock.mainPage.config.WeatherRequestConfig;
 import capsrock.mainPage.dto.response.DailyWeatherResponse;
 import capsrock.mainPage.dto.response.HourlyWeatherResponse;
 import java.net.URI;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
+@RequiredArgsConstructor
 public class WeatherInfoClient {
 
     private final WeatherRequestConfig weatherRequestConfig;
-    private final RestClient restClient;
-
-    public WeatherInfoClient(WeatherRequestConfig weatherRequestConfig) {
-        this.weatherRequestConfig = weatherRequestConfig;
-        this.restClient = RestClient.builder().build();
-    }
+    private final RestClient restClient = RestClient.builder().build();
 
     public HourlyWeatherResponse getHourlyWeatherResponse(Double latitude, Double longitude) {
 

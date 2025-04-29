@@ -8,16 +8,14 @@ import capsrock.mainPage.util.TimeUtil;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class DailyWeatherService {
 
     private final WeatherInfoClient weatherInfoClient;
-
-    public DailyWeatherService(WeatherInfoClient weatherInfoClient) {
-        this.weatherInfoClient = weatherInfoClient;
-    }
 
     public List<NextFewDaysWeather> getNextFewDaysWeather(Double latitude, Double longitude, Integer days) {
 //        List<Next7DaysWeather> next7DaysWeatherList = new ArrayList<>();

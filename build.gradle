@@ -18,22 +18,28 @@ repositories {
 }
 
 dependencies {
-
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+// for test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-//    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+// compile & runtime
+    //spring
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security:3.4.5'
+
+    //else
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.google.genai:google-genai:0.5.0'
-
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.module/jackson-module-jsonSchema
     implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.18.3'
 
-//    runtimeOnly 'com.mysql:mysql-connector-j'
+// only compile
+    compileOnly 'org.projectlombok:lombok:1.18.38'
 
-
+// only runtime
+    runtimeOnly 'com.mysql:mysql-connector-j'
 }
 
 tasks.named('test') {

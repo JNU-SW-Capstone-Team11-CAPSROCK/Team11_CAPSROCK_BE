@@ -48,7 +48,7 @@ public class ClothingPredictionResponseSchemaFactory {
                 .description("The ID of the user")
                 .build();
 
-        // oneUserData 배열의 items (개별 사용자 객체) 스키마 구성
+        // userDataList 배열의 items (개별 사용자 객체) 스키마 구성
         Map<String, Schema> itemProperties = ImmutableMap.of(
                 "userId", userIdSchema,
                 "predictedCorrectionValues", predictedCorrectionValuesSchema
@@ -62,8 +62,8 @@ public class ClothingPredictionResponseSchemaFactory {
                 .required(itemRequired) // required 리스트 설정
                 .build();
 
-        // oneUserData 배열 스키마 구성
-        List<String> oneUserDataRequired = Arrays.asList("oneUserData");
+        // userDataList 배열 스키마 구성
+        List<String> oneUserDataRequired = Arrays.asList("userDataList");
 
         Schema oneUserDataSchema = Schema.builder()
                 .type("array") // <-- 타입은 String으로 지정합니다
@@ -72,9 +72,9 @@ public class ClothingPredictionResponseSchemaFactory {
                 .build();
 
         Map<String, Schema> parametersProperties = ImmutableMap.of(
-                "oneUserData", oneUserDataSchema // 'oneUserData' 스키마 추가
+                "userDataList", oneUserDataSchema // 'userDataList' 스키마 추가
         );
-        List<String> parametersRequired = Arrays.asList("oneUserData");
+        List<String> parametersRequired = Arrays.asList("userDataList");
 
 
         return Schema.builder()

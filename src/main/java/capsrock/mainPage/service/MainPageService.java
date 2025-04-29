@@ -10,22 +10,16 @@ import capsrock.mainPage.dto.service.NextFewDaysWeather;
 import capsrock.mainPage.dto.request.MainPageRequest;
 import capsrock.mainPage.dto.response.MainPageResponse;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class MainPageService {
 
     private final HourlyWeatherService hourlyWeatherService;
     private final DailyWeatherService dailyWeatherService;
     private final GeocodingService geocodingService;
-
-    public MainPageService(HourlyWeatherService hourlyWeatherService,
-            DailyWeatherService dailyWeatherService, GeocodingService geocodingService) {
-        this.hourlyWeatherService = hourlyWeatherService;
-        this.dailyWeatherService = dailyWeatherService;
-        this.geocodingService = geocodingService;
-    }
-
 
     public MainPageResponse getMainPage(MainPageRequest mainPageRequest) {
 
