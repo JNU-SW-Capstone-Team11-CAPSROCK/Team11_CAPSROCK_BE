@@ -38,6 +38,7 @@ dependencies {
 
 // only compile
     compileOnly 'org.projectlombok:lombok:1.18.38'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
 
 // only runtime
     runtimeOnly 'com.mysql:mysql-connector-j'

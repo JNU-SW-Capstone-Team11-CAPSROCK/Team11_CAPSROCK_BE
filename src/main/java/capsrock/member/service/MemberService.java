@@ -3,8 +3,8 @@ package capsrock.member.service;
 
 import capsrock.dto.request.ClothingFeedbackRequest;
 import capsrock.member.dto.MemberInfoDTO;
-import capsrock.member.dto.request.LoginRequest;
-import capsrock.member.dto.request.RegisterRequest;
+import capsrock.auth.LoginRequest;
+import capsrock.auth.RegisterRequest;
 import capsrock.member.exception.MemberNotFoundException;
 import capsrock.member.model.entity.Member;
 import capsrock.member.model.vo.Email;

@@ -1,7 +1,7 @@
 package capsrock.clothing.prediction.service;
 
 import capsrock.clothing.prediction.client.ClothingGeminiClient;
-import capsrock.mainPage.service.DailyWeatherService;
+import capsrock.weather.service.DailyWeatherService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;

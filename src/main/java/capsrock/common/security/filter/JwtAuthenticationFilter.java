@@ -13,7 +13,11 @@ import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -21,49 +25,46 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter { //요청 당 한번만 활성화 되는 필터
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final static String BEARER_TYPE = "Bearer ";
-
-    private final JwtManager jwtManager; // 토큰 검증 클래스
-    private final ApplicationContext applicationContext; //MemberService를 Lazy하게 가져와서 순환참조를 방지한다.
+    private final JwtManager jwtManager;
+    private final ApplicationContext applicationContext;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
         try {
             String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
             if (authHeader == null || !authHeader.startsWith(BEARER_TYPE)) {
-                filterChain.doFilter(request, response);
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+                throw new InsufficientAuthenticationException("Auth 헤더가 유효하지 않습니다.");
             }
 
-            String token = authHeader.split(BEARER_TYPE)[1];
-
-            if (token == null || !jwtManager.validateToken(token)) {
-                filterChain.doFilter(request, response);
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+            String token = authHeader.substring(BEARER_TYPE.length());
+            if (!jwtManager.validateToken(token)) {
+                throw new BadCredentialsException("토큰이 올바르지 않습니다.");
             }
 
             Long userId = jwtManager.extractId(token);
-
             MemberService memberService = applicationContext.getBean(MemberService.class);
             MemberInfoDTO memberInfo = memberService.getMemberById(userId);
+
             CapsrockUserDetails userDetails = new CapsrockUserDetails(memberInfo);
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null /*이미 토큰인증 했기 때문에 null*/, null);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            filterChain.doFilter(request, response);
 
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            filterChain.doFilter(request, response);
-        } catch (Exception e) {
-            filterChain.doFilter(request, response);
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+        } catch (AuthenticationException ex) {
+            SecurityContextHolder.clearContext();
+            throw ex;
+        } catch (Exception ex) {
+            SecurityContextHolder.clearContext();
+            throw new AuthenticationServiceException("Authentication failed", ex);
         }
-
     }
 }
