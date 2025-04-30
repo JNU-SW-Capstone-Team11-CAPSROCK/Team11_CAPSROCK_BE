@@ -34,12 +34,15 @@ dependencies {
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.google.genai:google-genai:0.5.0'
     implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.18.3'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 
 // only compile
     compileOnly 'org.projectlombok:lombok:1.18.38'
 
 // only runtime
     runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 }
 
 tasks.named('test') {
