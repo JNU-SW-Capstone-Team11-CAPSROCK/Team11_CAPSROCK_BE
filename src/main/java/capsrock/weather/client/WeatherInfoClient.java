@@ -4,6 +4,7 @@ import capsrock.weather.config.WeatherRequestConfig;
 
 import capsrock.weather.dto.response.DailyWeatherResponse;
 import capsrock.weather.dto.response.HourlyWeatherResponse;
+import capsrock.weather.dto.response.PastWeatherResponse;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -66,5 +67,26 @@ public class WeatherInfoClient {
                 .retrieve()
                 .toEntity(DailyWeatherResponse.class).getBody();
     }
+//
+//    public PastWeatherResponse getPastWeatherResponse(Double latitude, Double longitude, String startUTC, String endUTC) {
+//        String httpUrl = weatherRequestConfig.historyBaseRequestUrl();
+//        String uriString = UriComponentsBuilder
+//                .fromHttpUrl(httpUrl)
+//                .queryParam("lat", latitude)
+//                .queryParam("lon", longitude)
+//                .queryParam("type", "hour")
+//                .queryParam("appid", weatherRequestConfig.restApiKey())
+//                .queryParam("start", startUTC)
+//                .queryParam("end", endUTC)
+//                .build().toUriString();
+//
+//        System.out.println("uriString = " + uriString);
+//
+//        return restClient
+//                .get()
+//                .uri(URI.create(uriString))
+//                .retrieve()
+//                .toEntity(PastWeatherResponse.class).getBody();
+//    }
 
 }

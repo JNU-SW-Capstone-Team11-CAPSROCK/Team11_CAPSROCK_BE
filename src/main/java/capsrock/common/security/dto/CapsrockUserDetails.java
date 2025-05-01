@@ -1,6 +1,6 @@
 package capsrock.common.security.dto;
 
-import capsrock.member.dto.MemberInfoDTO;
+import capsrock.member.dto.service.MemberInfoDTO;
 import java.util.Collection;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

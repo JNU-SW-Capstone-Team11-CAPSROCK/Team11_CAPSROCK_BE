@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record WeatherRequestConfig(
         String restApiKey,
         String baseRequestUrl,
+        String historyBaseRequestUrl,
         String currentWeatherPath,
         String forecastPath,
         String hourlyPath,

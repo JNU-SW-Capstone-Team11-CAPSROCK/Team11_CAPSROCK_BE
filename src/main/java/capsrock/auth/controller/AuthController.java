@@ -2,8 +2,9 @@ package capsrock.auth.controller;
 
 import capsrock.auth.dto.response.TokenResponse;
 import capsrock.auth.service.AuthService;
-import capsrock.auth.LoginRequest;
-import capsrock.auth.RegisterRequest;
+import capsrock.auth.dto.request.LoginRequest;
+import capsrock.auth.dto.request.RegisterRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,13 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
-
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest loginRequest) {

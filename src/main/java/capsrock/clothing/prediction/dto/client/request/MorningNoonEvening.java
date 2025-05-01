@@ -1,4 +1,4 @@
-package capsrock.clothing.prediction.dto.request;
+package capsrock.clothing.prediction.dto.client.request;
 
 public record MorningNoonEvening(
         Double morning,

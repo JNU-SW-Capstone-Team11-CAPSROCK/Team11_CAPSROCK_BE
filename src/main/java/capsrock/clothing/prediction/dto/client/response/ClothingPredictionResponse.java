@@ -1,4 +1,4 @@
-package capsrock.clothing.prediction.dto.response;
+package capsrock.clothing.prediction.dto.client.response;
 
 import java.util.List;
 

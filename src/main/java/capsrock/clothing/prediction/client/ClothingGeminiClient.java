@@ -2,8 +2,8 @@ package capsrock.clothing.prediction.client;
 
 
 import capsrock.clothing.prediction.config.GeminiPredictionRequestConfig;
-import capsrock.clothing.prediction.dto.request.ClothingPredictionRequest;
-import capsrock.clothing.prediction.dto.response.ClothingPredictionResponse;
+import capsrock.clothing.prediction.dto.client.request.ClothingPredictionRequest;
+import capsrock.clothing.prediction.dto.client.response.ClothingPredictionResponse;
 import capsrock.clothing.prediction.enums.GeminiModel;
 import capsrock.clothing.prediction.factory.ClothingPredictionResponseSchemaFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;

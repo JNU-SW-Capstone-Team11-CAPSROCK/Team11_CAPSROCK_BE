@@ -3,7 +3,7 @@ package capsrock.common.security.filter;
 
 import capsrock.common.security.dto.CapsrockUserDetails;
 import capsrock.common.security.jwt.manager.JwtManager;
-import capsrock.member.dto.MemberInfoDTO;
+import capsrock.member.dto.service.MemberInfoDTO;
 import capsrock.member.service.MemberService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,6 +21,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
@@ -30,6 +31,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final static String BEARER_TYPE = "Bearer ";
     private final JwtManager jwtManager;
     private final ApplicationContext applicationContext;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return !pathMatcher.match("/api/clothing/**", path);
+    }
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

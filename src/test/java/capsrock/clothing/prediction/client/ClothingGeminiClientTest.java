@@ -1,12 +1,14 @@
 package capsrock.clothing.prediction.client;
 
-import capsrock.clothing.prediction.dto.request.ClothingData;
-import capsrock.clothing.prediction.dto.request.ClothingPredictionRequest;
-import capsrock.clothing.prediction.dto.request.MorningNoonEvening;
-import capsrock.clothing.prediction.dto.request.OneUserData;
+import capsrock.clothing.prediction.dto.client.request.ClothingData;
+import capsrock.clothing.prediction.dto.client.request.ClothingPredictionRequest;
+import capsrock.clothing.prediction.dto.client.request.OneUserData;
+import capsrock.clothing.prediction.model.vo.Correction;
+import capsrock.clothing.prediction.model.vo.FeelsLikeTemp;
+import capsrock.clothing.prediction.model.vo.Score;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,59 +22,82 @@ class ClothingGeminiClientTest {
 
     @Test
     void getPrediction() throws JsonProcessingException {
-
         LocalDate now = LocalDate.now();
-        LocalDate yesterday = now.minusDays(1);
-        LocalDate twoDaysAgo = now.minusDays(2);
-        LocalDate threeDaysAgo = now.minusDays(3);
-        LocalDate fourDaysAgo = now.minusDays(4);
-        LocalDate fiveDaysAgo = now.minusDays(5);
-        LocalDate sixDaysAgo = now.minusDays(6);
+        List<ClothingData> clothingDataList = createLastDaysClothingData(now, 6);
 
-        MorningNoonEvening sixDaysAgoFeels = new MorningNoonEvening(12.0, 19.4, 13.2);
-        MorningNoonEvening fiveDaysAgoFeels = new MorningNoonEvening(10.0, 16.1, 12.2);
-        MorningNoonEvening fourDaysAgoFeels = new MorningNoonEvening(13.0, 15.4, 10.2);
-        MorningNoonEvening threeDaysAgoFeels = new MorningNoonEvening(9.4, 13.4, 3.2);
-        MorningNoonEvening twoDaysAgoFeels = new MorningNoonEvening(5.1, 12.4, 7.8);
-        MorningNoonEvening yesterdayFeels = new MorningNoonEvening(8.6, 21.4, 11.2);
-
-        MorningNoonEvening sixDaysAgoCorrections = new MorningNoonEvening(3.1, 2.5, 1.6);
-        MorningNoonEvening fiveDaysAgoCorrections = new MorningNoonEvening(-1.9, -0.2, 1.5);
-        MorningNoonEvening fourDaysAgoCorrections = new MorningNoonEvening(0.1, 0.3, -0.1);
-        MorningNoonEvening threeDaysAgoCorrections = new MorningNoonEvening(2.0, 1.4, 0.4);
-        MorningNoonEvening twoDaysAgoCorrections = new MorningNoonEvening(0.3, -0.5, 1.0);
-        MorningNoonEvening yesterdayCorrections = new MorningNoonEvening(0.4, 0.3, 0.4);
-
-        MorningNoonEvening sixDaysAgoScores = new MorningNoonEvening(0.0, -1.0, -1.0);
-        MorningNoonEvening fiveDaysAgoScores = new MorningNoonEvening(3.0, 1.0, 2.0);
-        MorningNoonEvening fourDaysAgoScores = new MorningNoonEvening(1.0, 2.0, 0.0);
-        MorningNoonEvening threeDaysAgoScores = new MorningNoonEvening(-1.0, 0.0, 1.0);
-        MorningNoonEvening twoDaysAgoScores = new MorningNoonEvening(6.0, 3.0, 3.0);
-        MorningNoonEvening yesterdayScores = new MorningNoonEvening(-3.0, -4.0, -2.0);
-
-        ClothingData sixDaysAgoClothingData = new ClothingData(sixDaysAgo, sixDaysAgoFeels,
-                sixDaysAgoCorrections, sixDaysAgoScores);
-        ClothingData fiveDaysAgoClothingData = new ClothingData(fiveDaysAgo, fiveDaysAgoFeels,
-                fiveDaysAgoCorrections, fiveDaysAgoScores);
-        ClothingData fourDaysAgoClothingData = new ClothingData(fourDaysAgo, fourDaysAgoFeels,
-                fourDaysAgoCorrections, fourDaysAgoScores);
-        ClothingData threeDaysAgoClothingData = new ClothingData(threeDaysAgo, threeDaysAgoFeels,
-                threeDaysAgoCorrections, threeDaysAgoScores);
-        ClothingData twoDaysAgoClothingData = new ClothingData(twoDaysAgo, twoDaysAgoFeels,
-                twoDaysAgoCorrections, twoDaysAgoScores);
-        ClothingData yesterdayClothingData = new ClothingData(yesterday, yesterdayFeels,
-                yesterdayCorrections, yesterdayScores);
-
-        List<ClothingData> clothingDataList = Arrays.asList(
-                sixDaysAgoClothingData, fiveDaysAgoClothingData, fourDaysAgoClothingData,
-                threeDaysAgoClothingData, twoDaysAgoClothingData, yesterdayClothingData
-        );
-
-        OneUserData oneUserData = new OneUserData(123L, clothingDataList);
-
+        OneUserData oneUserData = new OneUserData(123L, clothingDataList,
+                new FeelsLikeTemp(10.0, 20.0, 10.0));
+        
         ClothingPredictionRequest request = new ClothingPredictionRequest(
-                Arrays.asList(oneUserData), "어제는 조금 추웠다.");
+                List.of(oneUserData));
 
         client.getPrediction(request);
+    }
+
+    /**
+     * 지정된 날짜부터 과거 n일 동안의 의류 데이터를 생성합니다.
+     *
+     * @param baseDate 기준 날짜
+     * @param days     생성할 과거 일수
+     * @return 날짜 역순으로 정렬된 의류 데이터 목록 (과거 → 현재)
+     */
+    private List<ClothingData> createLastDaysClothingData(LocalDate baseDate, int days) {
+        List<ClothingData> result = new ArrayList<>();
+
+        for (int daysAgo = days; daysAgo > 0; daysAgo--) {
+            LocalDate date = baseDate.minusDays(daysAgo);
+            result.add(createClothingDataForDate(date, daysAgo));
+        }
+
+        return result;
+    }
+
+    /**
+     * 특정 날짜에 대한 의류 데이터를 생성합니다. 참고: 실제 테스트 데이터는 단순화를 위해 날짜 인덱스에 따라 다른 값을 할당
+     */
+    private ClothingData createClothingDataForDate(LocalDate date, int daysAgo) {
+        // 각 날짜별 데이터 매핑
+        FeelsLikeTemp feelsLikeTemp;
+        Correction correction;
+        Score score;
+
+        switch (daysAgo) {
+            case 6:
+                feelsLikeTemp = new FeelsLikeTemp(12.0, 19.4, 13.2);
+                correction = new Correction(3.1, 2.5, 1.6);
+                score = new Score(0, -1, -1);
+                break;
+            case 5:
+                feelsLikeTemp = new FeelsLikeTemp(10.0, 16.1, 12.2);
+                correction = new Correction(-1.9, -0.2, 1.5);
+                score = new Score(3, 1, 2);
+                break;
+            case 4:
+                feelsLikeTemp = new FeelsLikeTemp(13.0, 15.4, 10.2);
+                correction = new Correction(0.1, 0.3, -0.1);
+                score = new Score(1, 2, 0);
+                break;
+            case 3:
+                feelsLikeTemp = new FeelsLikeTemp(9.4, 13.4, 3.2);
+                correction = new Correction(2.0, 1.4, 0.4);
+                score = new Score(-1, 0, 1);
+                break;
+            case 2:
+                feelsLikeTemp = new FeelsLikeTemp(5.1, 12.4, 7.8);
+                correction = new Correction(0.3, -0.5, 1.0);
+                score = new Score(6, 3, 3);
+                break;
+            case 1:
+                feelsLikeTemp = new FeelsLikeTemp(8.6, 21.4, 11.2);
+                correction = new Correction(0.4, 0.3, 0.4);
+                score = new Score(-3, -4, -2);
+                break;
+            default:
+                feelsLikeTemp = new FeelsLikeTemp(0.0, 0.0, 0.0);
+                correction = new Correction(0.0, 0.0, 0.0);
+                score = new Score(0, 0, 0);
+        }
+
+        return new ClothingData(date, feelsLikeTemp, correction, score, "");
     }
 }
