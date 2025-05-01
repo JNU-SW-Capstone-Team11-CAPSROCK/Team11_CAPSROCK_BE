@@ -58,7 +58,7 @@ public class ClothingGeminiClient {
         );
 
         return geminiClient.async.models.generateContent(
-                        GeminiModel.PRO_2_5_PRO_EXP_03_25.getModelName(),
+                        GeminiModel.FLASH_2_5_PREVIEW_04_17.getModelName(),
                         contents,
                         config
                 )

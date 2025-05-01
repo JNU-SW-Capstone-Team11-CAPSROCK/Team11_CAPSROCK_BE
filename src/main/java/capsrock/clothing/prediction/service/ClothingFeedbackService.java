@@ -1,6 +1,7 @@
 package capsrock.clothing.prediction.service;
 
 import capsrock.clothing.prediction.dto.request.ClothingFeedbackRequest;
+import capsrock.clothing.prediction.exception.PendingFeedbackNotFoundException;
 import capsrock.clothing.prediction.model.entity.ClothingPrediction;
 import capsrock.clothing.prediction.model.vo.Score;
 import capsrock.clothing.prediction.model.vo.Status;
@@ -21,8 +22,8 @@ public class ClothingFeedbackService {
     public void saveFeedback(MemberInfoDTO memberInfoDTO,
             ClothingFeedbackRequest clothingFeedbackRequest) {
 
-//        if (havePending(memberInfoDTO.id()))
-//            throw new FeedbackPendingException("이미 대기중인 피드백이 있습니다");
+        if (!havePending(memberInfoDTO.id()))
+            throw new PendingFeedbackNotFoundException("대기 중인 피드백이 없습니다.");
 
         ClothingPrediction prediction = clothingPredictionRepository.findByMemberId(
                 memberInfoDTO.id()).orElseThrow(

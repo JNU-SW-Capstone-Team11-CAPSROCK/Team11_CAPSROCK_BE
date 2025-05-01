@@ -8,6 +8,7 @@ import capsrock.clothing.prediction.model.entity.ClothingPrediction;
 import capsrock.clothing.prediction.model.vo.Correction;
 import capsrock.clothing.prediction.model.vo.FeelsLikeTemp;
 import capsrock.clothing.prediction.model.vo.Location;
+import capsrock.clothing.prediction.model.vo.Score;
 import capsrock.clothing.prediction.model.vo.Status;
 import capsrock.clothing.prediction.repository.ClothingPredictionRepository;
 import capsrock.member.dto.service.RecentLocationDTO;
@@ -17,6 +18,7 @@ import capsrock.member.service.MemberService;
 import capsrock.weather.client.WeatherInfoClient;
 import capsrock.weather.dto.response.DailyWeatherResponse;
 
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("prod")
 public class ClothingPredictServiceIntegrationTest {
 
     @Autowired
@@ -260,9 +261,21 @@ public class ClothingPredictServiceIntegrationTest {
                 LocalDate.now().minusDays(1),
                 new FeelsLikeTemp(10.0, 15.0, 12.0)
         );
-        if (status.equals(Status.ARCHIVED)) {
-            prediction.changeToArchive();
+        if (status.equals(Status.COMPLETED) || status.equals(Status.ARCHIVED)) {
+            // PENDING에서 COMPLETED로 상태 변경
+            prediction.receiveFeedback(
+                    new Score(4, 4, 4),  // 더미 점수 데이터
+                    "테스트 피드백",
+                    LocalDateTime.now()
+            );
+
+            // ARCHIVED 상태로 변경해야 하는 경우 추가 처리
+            if (status.equals(Status.ARCHIVED)) {
+                prediction.changeToArchive();
+            }
         }
+
         return prediction;
+
     }
 }

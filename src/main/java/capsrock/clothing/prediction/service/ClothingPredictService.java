@@ -36,6 +36,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+//todo: 관심사 분리
 @Service
 @RequiredArgsConstructor
 public class ClothingPredictService {
@@ -80,20 +81,21 @@ public class ClothingPredictService {
                 prediction.changeToArchive();
             }
 
-            if (!clothingRecordMap.containsKey(prediction.getId())) {
+            Long memberId = prediction.getMember().getId();
+
+            if (!clothingRecordMap.containsKey(memberId)) {
                 // Sort.by(Sort.Direction.DESC, "predictedAt") 덕분에 가장 최근 예측 데이터로 기대함.
 
-                clothingRecordMap.put(prediction.getId(), new ArrayList<>());
-                recentLocationMap.put(prediction.getId(), memberService.getRecentLocationById(
-                        prediction.getId()));
+                clothingRecordMap.put(memberId, new ArrayList<>());
+                recentLocationMap.put(memberId, memberService.getRecentLocationById(memberId));
             }
 
-            if (clothingRecordMap.get(prediction.getId()).size() >= MAX_PREDICTION_DATA) {
+            if (clothingRecordMap.get(memberId).size() >= MAX_PREDICTION_DATA) {
                 continue;
             }
 
             if (prediction.getStatus().equals(Status.ARCHIVED)) {
-                List<ClothingRecordDTO> recordList = clothingRecordMap.get(prediction.getId());
+                List<ClothingRecordDTO> recordList = clothingRecordMap.get(memberId);
 
                 recordList.add(
                         ClothingRecordDTO.builder()
@@ -133,7 +135,8 @@ public class ClothingPredictService {
                         ))
                         .toList();
 
-                usersData.add(new OneUserData(memberId, clothingDataList, feelsLikeMap.get(memberId)));
+                usersData.add(
+                        new OneUserData(memberId, clothingDataList, feelsLikeMap.get(memberId)));
             }
 
             if (recordList.size() < MIN_PREDICTION_DATA) { //충분한 데이터가 없을 때 보정치 0으로 하기
