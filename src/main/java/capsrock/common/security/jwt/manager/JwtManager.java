@@ -1,6 +1,6 @@
 package capsrock.common.security.jwt.manager;
 
-import capsrock.member.dto.MemberInfoDTO;
+import capsrock.member.dto.service.MemberInfoDTO;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;

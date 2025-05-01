@@ -2,8 +2,8 @@ package capsrock.clothing.prediction.client;
 
 
 import capsrock.clothing.prediction.config.GeminiPredictionRequestConfig;
-import capsrock.clothing.prediction.dto.request.ClothingPredictionRequest;
-import capsrock.clothing.prediction.dto.response.ClothingPredictionResponse;
+import capsrock.clothing.prediction.dto.client.request.ClothingPredictionRequest;
+import capsrock.clothing.prediction.dto.client.response.ClothingPredictionResponse;
 import capsrock.clothing.prediction.enums.GeminiModel;
 import capsrock.clothing.prediction.factory.ClothingPredictionResponseSchemaFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -58,7 +58,7 @@ public class ClothingGeminiClient {
         );
 
         return geminiClient.async.models.generateContent(
-                        GeminiModel.PRO_2_5_PRO_EXP_03_25.getModelName(),
+                        GeminiModel.FLASH_2_5_PREVIEW_04_17.getModelName(),
                         contents,
                         config
                 )

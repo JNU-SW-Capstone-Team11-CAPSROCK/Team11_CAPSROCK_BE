@@ -1,14 +1,13 @@
 package capsrock.member.service;
 
 
-import capsrock.dto.request.ClothingFeedbackRequest;
-import capsrock.member.dto.MemberInfoDTO;
-import capsrock.member.dto.request.LoginRequest;
-import capsrock.member.dto.request.RegisterRequest;
+import capsrock.auth.dto.request.LoginRequest;
+import capsrock.auth.dto.request.RegisterRequest;
+import capsrock.member.dto.service.MemberInfoDTO;
+import capsrock.member.dto.service.RecentLocationDTO;
 import capsrock.member.exception.MemberNotFoundException;
 import capsrock.member.model.entity.Member;
 import capsrock.member.model.vo.Email;
-import capsrock.member.model.vo.EncryptedPassword;
 import capsrock.member.model.vo.PlainPassword;
 import capsrock.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,19 +22,30 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public MemberInfoDTO login(LoginRequest loginRequest) {
+        Email email;
+        PlainPassword plainPassword;
+        try {
+            email = new Email(loginRequest.email());
+            plainPassword = new PlainPassword(loginRequest.password());
+        } catch (IllegalArgumentException e) {
+            throw new MemberNotFoundException(
+                    "email이 %s인 회원을 찾지 못했습니다.".formatted(loginRequest.email()));
+        }
 
-        Email email = new Email(loginRequest.email());
-        PlainPassword plainPassword = new PlainPassword(loginRequest.password());
-        EncryptedPassword encryptedPassword = new EncryptedPassword(
-                passwordEncoder.encode(plainPassword.value()));
-
-        Member loginedMember = memberRepository.findByEmailAndEncryptedPassword(email, encryptedPassword)
+        Member foundMember = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new MemberNotFoundException(
                         "email이 %s인 회원을 찾지 못했습니다.".formatted(email.value())));
 
-        return MemberInfoDTO.from(loginedMember);
+        if (!passwordEncoder.matches(plainPassword.value(),
+                foundMember.getEncryptedPassword().value())) {
+            throw new MemberNotFoundException("email이 %s인 회원을 찾지 못했습니다.".formatted(email.value()));
+        }
+
+        foundMember.updateLocation(loginRequest.latitude(), loginRequest.longitude());
+
+        return MemberInfoDTO.from(foundMember);
     }
 
     @Transactional
@@ -46,7 +56,10 @@ public class MemberService {
                 .builder()
                 .email(registerRequest.email())
                 .encryptedPassword(passwordEncoder.encode(plainPassword.value()))
-                .nickname(registerRequest.nickname()).build();
+                .nickname(registerRequest.nickname())
+                .latitude(registerRequest.latitude())
+                .longitude(registerRequest.longitude())
+                .build();
 
         memberRepository.save(newMember);
 
@@ -61,8 +74,11 @@ public class MemberService {
         return MemberInfoDTO.from(member);
     }
 
-    @Transactional
-    public void saveClothingFeedback(Long memberId,
-            ClothingFeedbackRequest clothingFeedbackRequest) {
+    @Transactional(readOnly = true)
+    public RecentLocationDTO getRecentLocationById(Long id) {
+        MemberInfoDTO memberInfoDTO = getMemberById(id);
+
+        return new RecentLocationDTO(memberInfoDTO.recentLocation().longitude(),
+                memberInfoDTO.recentLocation().latitude());
     }
 }

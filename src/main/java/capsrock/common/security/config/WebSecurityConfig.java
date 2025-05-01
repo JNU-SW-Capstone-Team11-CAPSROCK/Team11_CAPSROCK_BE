@@ -1,5 +1,6 @@
 package capsrock.common.security.config;
 
+import capsrock.common.security.exception.handler.Rest401Handler;
 import capsrock.common.security.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -16,17 +17,21 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class WebSecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final Rest401Handler rest401Handler;
 
-    @Bean //todo: 옷차림 페이지 구현되면 config 리팩터링 하기
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher("/api/clothing/**") // 이 경로에만 적용
-                .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().authenticated()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/clothing/**").authenticated()
+                        .anyRequest().permitAll()
                 )
-                .csrf(AbstractHttpConfigurer::disable) // csrf 공격은 세션 방식에서 일어나니까 방어 비활성화
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) //세션 비활성화
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(rest401Handler)
+                )
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

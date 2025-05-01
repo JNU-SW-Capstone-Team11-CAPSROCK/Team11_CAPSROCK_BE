@@ -29,11 +29,12 @@ public class ClothingPredictionResponseSchemaFactory {
 
         // predictedCorrectionValues 객체 스키마 구성
         Map<String, Schema> predictedCorrectionProperties = ImmutableMap.of(
-                "morning", morningSchema,
-                "noon", noonSchema,
-                "evening", eveningSchema
+                "morningCorrection", morningSchema,
+                "noonCorrection", noonSchema,
+                "eveningCorrection", eveningSchema
         );
-        List<String> predictedCorrectionRequired = Arrays.asList("morning", "noon", "evening");
+        List<String> predictedCorrectionRequired = Arrays.asList("morningCorrection",
+                "noonCorrection", "eveningCorrection");
 
         Schema predictedCorrectionValuesSchema = Schema.builder()
                 .type("object") // JSON 타입: object
@@ -75,7 +76,6 @@ public class ClothingPredictionResponseSchemaFactory {
                 "userDataList", oneUserDataSchema // 'userDataList' 스키마 추가
         );
         List<String> parametersRequired = Arrays.asList("userDataList");
-
 
         return Schema.builder()
                 .type("object")
