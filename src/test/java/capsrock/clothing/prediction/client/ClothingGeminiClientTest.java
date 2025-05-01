@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,17 +22,17 @@ class ClothingGeminiClientTest {
     private ClothingGeminiClient client;
 
     @Test
-    void getPrediction() throws JsonProcessingException {
+    void getPrediction() throws JsonProcessingException, ExecutionException, InterruptedException {
         LocalDate now = LocalDate.now();
         List<ClothingData> clothingDataList = createLastDaysClothingData(now, 6);
 
         OneUserData oneUserData = new OneUserData(123L, clothingDataList,
                 new FeelsLikeTemp(10.0, 20.0, 10.0));
-        
+
         ClothingPredictionRequest request = new ClothingPredictionRequest(
                 List.of(oneUserData));
 
-        client.getPrediction(request);
+        System.out.println("client.getPrediction(request) = " + client.getPrediction(request).get());
     }
 
     /**

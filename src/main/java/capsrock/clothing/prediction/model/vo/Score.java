@@ -8,10 +8,10 @@ public record Score(
 ) {
 
     public Score {
-        validate();
+        validate(morningScore, noonScore, eveningScore);
     }
 
-    private void validate() {
+    private void validate(Integer morningScore, Integer noonScore, Integer eveningScore) {
         if (morningScore == null || noonScore == null || eveningScore == null) {
             throw new IllegalArgumentException("점수를 입력해주시기 바랍니다.");
         }
