@@ -1,8 +1,7 @@
 package capsrock.fineDust.client;
 
-import capsrock.fineDust.dto.FineDustResponse;
+import capsrock.fineDust.dto.response.FineDustApiResponse;
 import capsrock.weather.config.WeatherRequestConfig;
-import capsrock.weather.dto.response.DailyWeatherResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -18,7 +17,7 @@ public class FineDustInfoClient {
     private final RestClient restClient = RestClient.builder().build();
 
 
-    public FineDustResponse getFineDustResponse(Double latitude, Double longitude) {
+    public FineDustApiResponse getFineDustResponse(Double latitude, Double longitude) {
 
         String httpUrl = weatherRequestConfig.baseRequestUrl() +
                 weatherRequestConfig.airPollutionPath() +
@@ -37,6 +36,6 @@ public class FineDustInfoClient {
                 .get()
                 .uri(URI.create(uriString))
                 .retrieve()
-                .toEntity(FineDustResponse.class).getBody();
+                .toEntity(FineDustApiResponse.class).getBody();
     }
 }
