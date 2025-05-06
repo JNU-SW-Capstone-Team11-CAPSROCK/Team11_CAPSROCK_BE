@@ -3,6 +3,8 @@ package capsrock.member.service;
 
 import capsrock.auth.dto.request.LoginRequest;
 import capsrock.auth.dto.request.RegisterRequest;
+import capsrock.clothing.model.vo.FeelsLikeTemp;
+import capsrock.clothing.service.ClothingPredictionDataService;
 import capsrock.member.dto.service.MemberInfoDTO;
 import capsrock.member.dto.service.RecentLocationDTO;
 import capsrock.member.exception.MemberNotFoundException;
@@ -10,6 +12,9 @@ import capsrock.member.model.entity.Member;
 import capsrock.member.model.vo.Email;
 import capsrock.member.model.vo.PlainPassword;
 import capsrock.member.repository.MemberRepository;
+import capsrock.weather.client.WeatherInfoClient;
+import capsrock.weather.dto.response.DailyWeatherResponse;
+import capsrock.weather.dto.response.DailyWeatherResponse.FeelsLike;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +26,8 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ClothingPredictionDataService clothingPredictionDataService;
+    private final WeatherInfoClient weatherInfoClient;
 
     @Transactional
     public MemberInfoDTO login(LoginRequest loginRequest) {
@@ -61,7 +68,17 @@ public class MemberService {
                 .longitude(registerRequest.longitude())
                 .build();
 
-        memberRepository.save(newMember);
+        Member member = memberRepository.save(newMember);
+
+        DailyWeatherResponse response = weatherInfoClient.getDailyWeatherResponse(
+                registerRequest.latitude(), registerRequest.longitude(), 1);
+
+        FeelsLike feelsLike = response.list().getFirst().feelsLike();
+        FeelsLikeTemp feelsLikeTemp = new FeelsLikeTemp(feelsLike.morn(), feelsLike.day(),
+                feelsLike.eve());
+
+        clothingPredictionDataService.saveNewPredictionForRegister(member.getId(),
+                registerRequest.latitude(), registerRequest.longitude(), feelsLikeTemp);
 
         return MemberInfoDTO.from(newMember);
     }

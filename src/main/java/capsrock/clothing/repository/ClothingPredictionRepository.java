@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ClothingPredictionRepository extends JpaRepository<ClothingPrediction, Long> {
     Optional<ClothingPrediction> findByMemberId(Long memberId);
+    ClothingPrediction findByMemberIdAndStatus(Long memberId, Status status);
 
     Boolean existsByMemberIdAndStatus(Long memberId, Status status);
 }

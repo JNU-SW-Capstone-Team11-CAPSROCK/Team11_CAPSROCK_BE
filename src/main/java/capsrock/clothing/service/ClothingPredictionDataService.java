@@ -2,19 +2,23 @@ package capsrock.clothing.service;
 
 import capsrock.clothing.dto.service.NewPredictionDataDTO;
 import capsrock.clothing.dto.service.PredictionInfoDTO;
+import capsrock.clothing.exception.PendingFeedbackNotFoundException;
 import capsrock.clothing.model.entity.ClothingPrediction;
+import capsrock.clothing.model.vo.Correction;
+import capsrock.clothing.model.vo.FeelsLikeTemp;
+import capsrock.clothing.model.vo.Location;
 import capsrock.clothing.model.vo.Status;
 import capsrock.clothing.repository.ClothingPredictionRepository;
 import capsrock.member.exception.MemberNotFoundException;
 import capsrock.member.model.entity.Member;
 import capsrock.member.repository.MemberRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +33,26 @@ public class ClothingPredictionDataService {
                 .stream()
                 .map(this::mapToPredictionInfoDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Correction findCorrectionsByMemberIdAndPending(Long memberId) {
+        ClothingPrediction prediction = clothingPredictionRepository.findByMemberIdAndStatus(
+                memberId, Status.PENDING);
+
+        if (prediction == null) {
+            throw new PendingFeedbackNotFoundException(
+                    "Id가 %d이고 PENDING인 예측 데이터를 찾을 수 없습니다.".formatted(memberId));
+        }
+
+        PredictionInfoDTO predictionInfoDTO = mapToPredictionInfoDTO(prediction);
+
+        return predictionInfoDTO.correction();
+    }
+
+    @Transactional(readOnly = true)
+    public Boolean hasPendingPrediction(Long memberId) {
+        return clothingPredictionRepository.existsByMemberIdAndStatus(memberId, Status.PENDING);
     }
 
     @Transactional
@@ -54,6 +78,21 @@ public class ClothingPredictionDataService {
                 .map(this::mapToClothingPrediction)
                 .collect(Collectors.toList());
         clothingPredictionRepository.saveAll(entitiesToSave);
+    }
+
+    @Transactional
+    public void saveNewPredictionForRegister(Long memberId, Double latitude, Double longitude, FeelsLikeTemp feelsLikeTemp) {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (now.getHour() == 0){
+            now = now.minusDays(1);
+        }
+
+        NewPredictionDataDTO newPrediction = new NewPredictionDataDTO(
+                memberId, new Correction(0.0, 0.0, 0.0)
+                , new Location(longitude, latitude), now.toLocalDate(), feelsLikeTemp
+        );
+        clothingPredictionRepository.save(mapToClothingPrediction(newPrediction));
     }
 
     private PredictionInfoDTO mapToPredictionInfoDTO(ClothingPrediction entity) {

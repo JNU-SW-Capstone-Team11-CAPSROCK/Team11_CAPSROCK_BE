@@ -49,7 +49,17 @@ public class TimeUtil {
         return dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.KOREAN);
     }
 
+    public static Integer getHourFromDateTimeString(String dateTimeString) {
+        // 입력 문자열의 형식 정의
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+        // 문자열을 LocalDateTime 객체로 파싱
+        LocalDateTime dateTime = LocalDateTime.parse(dateTimeString, formatter);
+
+        // 시간(hour)만 추출 (0-23)
+        return dateTime.getHour();
+
+    }
 
 }
 

@@ -1,7 +1,5 @@
 package capsrock.weather.service;
 
-import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
-import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse.StructureData;
 import capsrock.location.geocoding.dto.service.AddressDTO;
 import capsrock.location.geocoding.service.GeocodingService;
 import capsrock.weather.dto.service.Dashboard;
@@ -23,7 +21,7 @@ public class WeatherService {
 
     public WeatherResponse getWeather(WeatherRequest weatherRequest) {
 
-        AddressDTO addressDTO = getAddressFromGPS(weatherRequest.longitude(),
+        AddressDTO addressDTO = geocodingService.getAddressFromGPS(weatherRequest.longitude(),
                 weatherRequest.latitude());
 
         List<Next23HoursWeather> next23HoursWeatherList = hourlyWeatherService.getHourlyWeather(
@@ -39,15 +37,6 @@ public class WeatherService {
         return new WeatherResponse(dashboard, next23HoursWeatherList, next7DaysWeatherList);
     }
 
-
-    private AddressDTO getAddressFromGPS(Double longitude, Double latitude) {
-
-        ReverseGeocodingResponse response = geocodingService.doReverseGeocoding(longitude,
-                latitude);
-        StructureData structure = response.response().result().getFirst().structure();
-
-        return new AddressDTO(structure.level1(), structure.level2());
-    }
 
 
 }

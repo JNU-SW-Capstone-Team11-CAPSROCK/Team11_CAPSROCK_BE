@@ -30,11 +30,11 @@ public class Member extends BaseEntity {
     private Long id;
 
     @Embedded
-    @AttributeOverride(name = "value", column = @Column(name = "email", nullable = false))
+    @AttributeOverride(name = "value", column = @Column(name = "email", nullable = false, unique = true))
     private Email email;
 
     @Embedded
-    @AttributeOverride(name = "value", column = @Column(name = "nickname", nullable = false))
+    @AttributeOverride(name = "value", column = @Column(name = "nickname", nullable = false, unique = true))
     private Nickname nickname;
 
     @Embedded
