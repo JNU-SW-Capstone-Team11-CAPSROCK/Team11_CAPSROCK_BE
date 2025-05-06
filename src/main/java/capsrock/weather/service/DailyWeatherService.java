@@ -4,7 +4,7 @@ import capsrock.weather.client.WeatherInfoClient;
 import capsrock.weather.dto.service.NextFewDaysWeather;
 import capsrock.weather.dto.response.DailyWeatherResponse;
 import capsrock.weather.enums.WeatherEnum;
-import capsrock.weather.util.TimeUtil;
+import capsrock.util.TimeUtil;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;

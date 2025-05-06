@@ -6,7 +6,7 @@ import capsrock.weather.dto.response.HourlyWeatherResponse;
 import capsrock.weather.dto.response.HourlyWeatherResponse.Rain;
 import capsrock.weather.dto.response.HourlyWeatherResponse.Snow;
 import capsrock.weather.enums.WeatherEnum;
-import capsrock.weather.util.TimeUtil;
+import capsrock.util.TimeUtil;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;

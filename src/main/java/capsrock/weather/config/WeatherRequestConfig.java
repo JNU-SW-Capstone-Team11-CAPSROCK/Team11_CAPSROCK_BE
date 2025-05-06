@@ -10,5 +10,6 @@ public record WeatherRequestConfig(
         String currentWeatherPath,
         String forecastPath,
         String hourlyPath,
-        String dailyPath
+        String dailyPath,
+        String airPollutionPath
 ) { }
