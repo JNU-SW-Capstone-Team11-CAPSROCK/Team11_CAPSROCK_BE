@@ -2,11 +2,11 @@ package capsrock.clothing.service;
 
 import capsrock.clothing.dto.service.NextFewDaysClothingDTO;
 import capsrock.clothing.enums.ClothingType;
+import capsrock.util.TimeUtil;
 import capsrock.weather.client.WeatherInfoClient;
 import capsrock.weather.dto.response.DailyWeatherResponse;
 import capsrock.weather.dto.response.DailyWeatherResponse.FeelsLike;
 import capsrock.weather.dto.response.DailyWeatherResponse.Forecast;
-import capsrock.weather.util.TimeUtil;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
