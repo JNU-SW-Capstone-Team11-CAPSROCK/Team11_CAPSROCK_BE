@@ -18,25 +18,33 @@ repositories {
 }
 
 dependencies {
-
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+// for test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+
+// compile & runtime
+    //spring
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security:3.4.5'
 
-
+    //else
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'com.google.genai:google-genai:0.5.0'
+    implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.18.3'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 
-    //csv 파일에 관한 의존성
-    implementation 'com.opencsv:opencsv:5.9'
+// only compile
+    compileOnly 'org.projectlombok:lombok:1.18.38'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
 
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
-
-
+// only runtime
     runtimeOnly 'com.mysql:mysql-connector-j'
-
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    runtimeOnly 'com.h2database:h2'
 }
 
 tasks.named('test') {

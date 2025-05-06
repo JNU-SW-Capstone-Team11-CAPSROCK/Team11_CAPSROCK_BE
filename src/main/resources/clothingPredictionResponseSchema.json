@@ -1,0 +1,43 @@
+{
+  "name": "get_clothing_prediction_response",
+  "description": "Provides clothing correction values for a list of users for different times of the day.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "oneUserData": {
+        "type": "array",
+        "description": "List of predicted correction values for each user",
+        "items": {
+          "type": "object",
+          "properties": {
+            "userId": {
+              "type": "integer",
+              "description": "The ID of the user"
+            },
+            "predictedCorrectionValues": {
+              "type": "object",
+              "description": "Predicted correction values for morning, noon, and evening",
+              "properties": {
+                "morning": {
+                  "type": "number",
+                  "description": "Correction value for morning"
+                },
+                "noon": {
+                  "type": "number",
+                  "description": "Correction value for noon"
+                },
+                "evening": {
+                  "type": "number",
+                  "description": "Correction value for evening"
+                }
+              },
+              "required": ["morning", "noon", "evening"]
+            }
+          },
+          "required": ["userId", "predictedCorrectionValues"]
+        }
+      }
+    },
+    "required": ["oneUserData"]
+  }
+}
