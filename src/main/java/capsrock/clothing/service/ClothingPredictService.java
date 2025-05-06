@@ -1,209 +1,112 @@
 package capsrock.clothing.service;
 
-import capsrock.clothing.client.ClothingGeminiClient;
-import capsrock.clothing.dto.client.request.ClothingData;
-import capsrock.clothing.dto.client.request.ClothingPredictionRequest;
-import capsrock.clothing.dto.client.request.OneUserData;
-import capsrock.clothing.dto.client.response.ClothingPredictionResponse;
 import capsrock.clothing.dto.client.response.UserPrediction;
-import capsrock.clothing.dto.service.ClothingRecordDTO;
-import capsrock.clothing.model.entity.ClothingPrediction;
-import capsrock.clothing.model.vo.Correction;
-import capsrock.clothing.model.vo.FeelsLikeTemp;
+import capsrock.clothing.dto.service.AggregatedUserDataDTO;
+import capsrock.clothing.dto.service.NewPredictionDataDTO;
+import capsrock.clothing.dto.service.PredictionInfoDTO;
 import capsrock.clothing.model.vo.Location;
 import capsrock.clothing.model.vo.Status;
-import capsrock.clothing.repository.ClothingPredictionRepository;
-import capsrock.member.dto.service.RecentLocationDTO;
-import capsrock.member.exception.MemberNotFoundException;
-import capsrock.member.model.entity.Member;
-import capsrock.member.repository.MemberRepository;
-import capsrock.member.service.MemberService;
-import capsrock.weather.client.WeatherInfoClient;
-import capsrock.weather.dto.response.DailyWeatherResponse;
-import capsrock.weather.dto.response.DailyWeatherResponse.FeelsLike;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-//todo: 관심사 분리
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ClothingPredictService {
 
-    private static final Integer MAX_PREDICTION_DATA = 20;
-    private static final Integer MIN_PREDICTION_DATA = 5;
-    private static final Integer CHUNK_SIZE = 10;
-
-
-    private final ClothingGeminiClient clothingGeminiClient;
-    private final ClothingPredictionRepository clothingPredictionRepository;
-    private final MemberService memberService;
-    private final WeatherInfoClient weatherInfoClient;
-    private final MemberRepository memberRepository;
+    private final ClothingPredictionDataService dataService;
+    private final UserDataAggregationService aggregationService;
+    private final PredictionRequestService requestService;
 
     @Scheduled(cron = "0 0 1 * * ?")
     @Transactional
-    public void predict() throws JsonProcessingException, ExecutionException, InterruptedException {
+    public void predict() {
+        log.info("Starting scheduled clothing prediction process.");
+        try {
+            // 1. 처리할 예측 데이터 조회
+            List<PredictionInfoDTO> allPredictions = dataService.findAllPredictionsSortedByDate();
 
-        /*
-         * 1. Status가 COMPLETE인걸 ARCHIVED로 바꾼다.
-         * 2. 각 회원들에 대하여 Status가 ARCHIVED 인게 5개 이상이라면 그 회원의 데이터를 최근 순으로 최대 20개 가져온다
-         * 2-1. 만약 5개 미만이라면 보정치를 0으로 두고 gemini에게 요청을 보내지 않는다.
-         * 3. gemini에게 예측을 시킨다.
-         * 4. 예측한걸 ClothingPrediction에 저장한다.
-         * */
-
-        //gemini에게 다음날 보정치 예측 시키기
-//        clothingGeminiClient.getPrediction();
-
-        List<ClothingPrediction> predictionList = clothingPredictionRepository.findAll(
-                Sort.by(Sort.Direction.DESC, "predictedAt") //최근으로 내림차순
-        );
-
-        Map<Long, List<ClothingRecordDTO>> clothingRecordMap = new HashMap<>();
-        Map<Long, RecentLocationDTO> recentLocationMap = new HashMap<>();
-        Map<Long, FeelsLikeTemp> feelsLikeMap = new HashMap<>();
-        List<UserPrediction> userPredictions = new ArrayList<>();
-
-        for (ClothingPrediction prediction : predictionList) {
-            if (prediction.getStatus().equals(Status.COMPLETED)) {
-                prediction.changeToArchive();
+            // 2. COMPLETED 상태인 예측 ID 목록 추출 및 ARCHIVED로 상태 변경 요청
+            List<Long> completedPredictionIds = allPredictions.stream()
+                    .filter(p -> p.status().equals(Status.COMPLETED))
+                    .map(PredictionInfoDTO::predictionId)
+                    .toList();
+            if (!completedPredictionIds.isEmpty()) {
+                log.info("Archiving {} completed predictions.", completedPredictionIds.size());
+                dataService.archiveCompletedPredictions(completedPredictionIds);
             }
 
-            Long memberId = prediction.getMember().getId();
+            // 3. 사용자별 데이터 집계 (위치, 날씨 포함) - ARCHIVED 상태 데이터 기반
+            List<PredictionInfoDTO> processablePredictions = allPredictions.stream()
+                    //.filter(p -> p.status().equals(Status.ARCHIVED) || completedPredictionIds.contains(p.predictionId())) // 방금 업데이트된 것도 포함하도록 필터링
+                    .filter(p -> !p.status()
+                            .equals(Status.PENDING)) // PENDING 상태는 제외 (혹은 비즈니스 로직에 따라 조정)
+                    .toList();
+            Map<Long, AggregatedUserDataDTO> aggregatedDataMap = aggregationService.aggregateUserData(
+                    processablePredictions);
 
-            if (!clothingRecordMap.containsKey(memberId)) {
-                // Sort.by(Sort.Direction.DESC, "predictedAt") 덕분에 가장 최근 예측 데이터로 기대함.
+            // 4. Gemini 요청 데이터 준비 (충분한 데이터가 있는 사용자) 및 기본 예측 생성 (데이터 부족 사용자)
+            PredictionRequestService.PreparedRequestData preparedRequest = requestService.prepareRequestData(
+                    aggregatedDataMap);
+            List<UserPrediction> defaultPredictions = preparedRequest.defaultPredictions();
 
-                clothingRecordMap.put(memberId, new ArrayList<>());
-                recentLocationMap.put(memberId, memberService.getRecentLocationById(memberId));
+            // 5. Gemini API 호출
+            log.info("Requesting predictions from Gemini for {} users.",
+                    preparedRequest.dataForGemini().size());
+            List<UserPrediction> geminiPredictions = requestService.requestPredictions(
+                    preparedRequest.dataForGemini());
+
+            // 6. 모든 예측 결과 통합 (Gemini 결과 + 기본 결과)
+            List<UserPrediction> finalUserPredictions = new ArrayList<>(defaultPredictions);
+            finalUserPredictions.addAll(geminiPredictions);
+
+            if (finalUserPredictions.isEmpty()) {
+                log.info("No predictions to save.");
+                return;
             }
 
-            if (clothingRecordMap.get(memberId).size() >= MAX_PREDICTION_DATA) {
-                continue;
-            }
+            // 7. 새로운 예측 데이터 DTO 생성 (저장용)
+            LocalDate today = LocalDate.now();
+            List<NewPredictionDataDTO> newPredictionsToSave = finalUserPredictions.stream()
+                    .map(userPrediction -> {
+                        AggregatedUserDataDTO userData = aggregatedDataMap.get(
+                                userPrediction.userId());
+                        if (userData == null) {
+                            log.warn("Aggregated data not found for user ID: {}",
+                                    userPrediction.userId());
+                            return null; // 또는 기본 위치/온도로 처리
+                        }
+                        Location location = new Location(userData.location().longitude(),
+                                userData.location().latitude());
+                        return new NewPredictionDataDTO(
+                                userPrediction.userId(),
+                                userPrediction.predictedCorrectionValues(),
+                                location,
+                                today,
+                                userData.todaysFeelsLikeTemp()
+                        );
+                    })
+                    .filter(Objects::nonNull) // userData가 없는 경우 제외
+                    .collect(Collectors.toList());
 
-            if (prediction.getStatus().equals(Status.ARCHIVED)) {
-                List<ClothingRecordDTO> recordList = clothingRecordMap.get(memberId);
+            // 8. 새로운 예측 결과 저장
+            log.info("Saving {} new predictions.", newPredictionsToSave.size());
+            dataService.saveNewPredictions(newPredictionsToSave);
 
-                recordList.add(
-                        ClothingRecordDTO.builder()
-                                .predictionDate(prediction.getPredictedAt())
-                                .score(prediction.getScore())
-                                .correction(prediction.getCorrection())
-                                .feelsLikeTemp(prediction.getFeelsLikeTemp())
-                                .build()
-                );
-            }
+            log.info("Scheduled clothing prediction process finished successfully.");
 
-
+        } catch (Exception e) {
+            log.error("Error during scheduled clothing prediction process", e);
         }
-        List<OneUserData> usersData = new ArrayList<>();
-
-        clothingRecordMap.forEach((memberId, recordList) -> {
-
-            RecentLocationDTO recentLocationDTO = recentLocationMap.get(memberId);
-            DailyWeatherResponse dailyWeatherResponse = weatherInfoClient.getDailyWeatherResponse(
-                    recentLocationDTO.latitude(), recentLocationDTO.longitude(), 1);
-
-            FeelsLike todayFeelsLike = dailyWeatherResponse.list().getFirst().feelsLike();
-
-            feelsLikeMap.put(memberId,
-                    new FeelsLikeTemp(todayFeelsLike.morn(), todayFeelsLike.day(),
-                            todayFeelsLike.eve()));
-
-            if (recordList.size() >= MIN_PREDICTION_DATA) {
-
-                List<ClothingData> clothingDataList = recordList.stream()
-                        .map(record -> new ClothingData(
-                                record.predictionDate(),
-                                record.feelsLikeTemp(),
-                                record.correction(),
-                                record.score(),
-                                record.comment()
-                        ))
-                        .toList();
-
-                usersData.add(
-                        new OneUserData(memberId, clothingDataList, feelsLikeMap.get(memberId)));
-            }
-
-            if (recordList.size() < MIN_PREDICTION_DATA) { //충분한 데이터가 없을 때 보정치 0으로 하기
-                userPredictions.add(
-                        new UserPrediction(memberId, new Correction(0.0, 0.0, 0.0)));
-            }
-        });
-
-        // 요청을 청크 단위로 나누기
-        List<List<OneUserData>> chunkedUsersData = new ArrayList<>();
-        for (int i = 0; i < usersData.size(); i += CHUNK_SIZE) {
-            chunkedUsersData.add(
-                    usersData.subList(i, Math.min(i + CHUNK_SIZE, usersData.size()))
-            );
-        }
-
-        List<CompletableFuture<ClothingPredictionResponse>> futures = new ArrayList<>();
-            //sdaklfjlaskdjflk;asdf
-        // 각 청크에 대한 비동기 요청 생성
-        for (List<OneUserData> chunk : chunkedUsersData) {
-            try {
-                ClothingPredictionRequest chunkRequest = new ClothingPredictionRequest(chunk);
-                CompletableFuture<ClothingPredictionResponse> future =
-                        clothingGeminiClient.getPrediction(chunkRequest);
-                futures.add(future);
-            } catch (JsonProcessingException e) {
-            }
-        }
-
-        if (futures.isEmpty()) {
-            return;
-        }
-
-        // 모든 비동기 요청 완료 대기 및 결과 처리
-        // 모든 예측 결과를 DB에 저장
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(v -> futures.stream()
-                        .map(CompletableFuture::join)  // 모든 future의 결과 가져오기
-                        .flatMap(response -> response.userDataList().stream())
-                        .collect(Collectors.toList()))
-                .thenAccept(userPredictions::addAll)
-                .exceptionally(ex -> {
-                    return null;
-                })
-                .get(); // 비동기 작업 완료 대기 (scheduled 메서드이므로 블로킹해도 괜찮음)
-
-        List<ClothingPrediction> allUserPredictionEntities = new ArrayList<>();
-
-        for (UserPrediction userPrediction : userPredictions) {
-            Member foundMember = memberRepository.findById(userPrediction.userId()).orElseThrow(
-                    () -> new MemberNotFoundException(
-                            "id가 %d은 회원을 찾지 못했습니다.".formatted(userPrediction.userId())));
-
-            Correction correction = userPrediction.predictedCorrectionValues();
-            RecentLocationDTO recentLocationDTO = recentLocationMap.get(foundMember.getId());
-            Location location = new Location(recentLocationDTO.longitude(),
-                    recentLocationDTO.latitude());
-
-            allUserPredictionEntities.add(
-                    new ClothingPrediction(foundMember, correction, location, LocalDate.now(),
-                            feelsLikeMap.get(foundMember.getId())
-                    )
-            );
-
-        }
-
-        clothingPredictionRepository.saveAll(allUserPredictionEntities);
     }
-
 }

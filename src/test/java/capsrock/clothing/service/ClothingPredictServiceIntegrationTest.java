@@ -38,7 +38,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@ActiveProfiles("prod")
+@ActiveProfiles("dev")
 public class ClothingPredictServiceIntegrationTest {
 
     @Autowired
