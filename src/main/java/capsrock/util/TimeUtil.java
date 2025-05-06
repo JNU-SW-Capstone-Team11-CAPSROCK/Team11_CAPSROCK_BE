@@ -1,4 +1,4 @@
-package capsrock.weather.util;
+package capsrock.util;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
