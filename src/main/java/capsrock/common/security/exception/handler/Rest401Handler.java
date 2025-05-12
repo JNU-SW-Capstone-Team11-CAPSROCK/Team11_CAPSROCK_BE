@@ -10,11 +10,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class Rest401Handler implements AuthenticationEntryPoint {
 
+    private static final String UNAUTHORIZED_EXCEPTION_MESSAGE =
+            """
+                {"message" : "인증이 필요합니다."}
+            """;
+
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
-        response.getWriter().write("{\"message\": \"인증이 필요합니다.\"}");
+        response.getWriter().write(UNAUTHORIZED_EXCEPTION_MESSAGE);
     }
 }
