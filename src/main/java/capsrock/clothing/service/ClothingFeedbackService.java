@@ -7,7 +7,7 @@ import capsrock.clothing.model.vo.Score;
 import capsrock.clothing.model.vo.Status;
 import capsrock.clothing.repository.ClothingPredictionRepository;
 import capsrock.member.dto.service.MemberInfoDTO;
-import capsrock.member.exception.MemberException;
+import capsrock.member.exception.MemberNotFoundException;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class ClothingFeedbackService {
 
         ClothingPrediction prediction = clothingPredictionRepository.findByMemberId(
                 memberInfoDTO.id()).orElseThrow(
-                () -> new MemberException("id가 %d인 회원을 찾지 못했습니다.".formatted(memberInfoDTO.id())));
+                () -> new MemberNotFoundException("id가 %d인 회원을 찾지 못했습니다.".formatted(memberInfoDTO.id())));
 
         applyFeedbackToEntity(prediction, clothingFeedbackRequest);
     }

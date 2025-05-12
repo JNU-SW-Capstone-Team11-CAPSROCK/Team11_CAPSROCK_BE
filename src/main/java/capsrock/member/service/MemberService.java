@@ -7,6 +7,8 @@ import capsrock.clothing.model.vo.FeelsLikeTemp;
 import capsrock.clothing.service.ClothingPredictionDataService;
 import capsrock.member.dto.service.MemberInfoDTO;
 import capsrock.member.dto.service.RecentLocationDTO;
+import capsrock.member.exception.LoginFailedException;
+import capsrock.member.exception.MemberDuplicatedEmailException;
 import capsrock.member.exception.MemberNotFoundException;
 import capsrock.member.model.entity.Member;
 import capsrock.member.model.vo.Email;
@@ -37,17 +39,15 @@ public class MemberService {
             email = new Email(loginRequest.email());
             plainPassword = new PlainPassword(loginRequest.password());
         } catch (IllegalArgumentException e) {
-            throw new MemberNotFoundException(
-                    "email이 %s인 회원을 찾지 못했습니다.".formatted(loginRequest.email()));
+            throw new LoginFailedException();
         }
 
         Member foundMember = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException(
-                        "email이 %s인 회원을 찾지 못했습니다.".formatted(email.value())));
+                .orElseThrow(LoginFailedException::new);
 
         if (!passwordEncoder.matches(plainPassword.value(),
                 foundMember.getEncryptedPassword().value())) {
-            throw new MemberNotFoundException("email이 %s인 회원을 찾지 못했습니다.".formatted(email.value()));
+            throw new LoginFailedException();
         }
 
         foundMember.updateLocation(loginRequest.latitude(), loginRequest.longitude());
@@ -57,6 +57,11 @@ public class MemberService {
 
     @Transactional
     public MemberInfoDTO register(RegisterRequest registerRequest) {
+
+        if (memberRepository.existsByEmail(new Email(registerRequest.email()))) {
+            throw new MemberDuplicatedEmailException();
+        }
+
         PlainPassword plainPassword = new PlainPassword(registerRequest.password());
 
         Member newMember = Member
