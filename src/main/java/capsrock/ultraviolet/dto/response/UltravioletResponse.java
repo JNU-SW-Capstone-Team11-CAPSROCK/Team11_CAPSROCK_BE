@@ -1,21 +1,14 @@
 package capsrock.ultraviolet.dto.response;
 
+import capsrock.ultraviolet.dto.service.Dashboard;
+import capsrock.ultraviolet.dto.service.Next23HoursUltravioletLevel;
+import capsrock.ultraviolet.dto.service.NextFewDaysUltravioletLevel;
+
 import java.util.List;
 
 public record UltravioletResponse(
-        Coord coord,
-        List<HourlyUVData> hourly,
-        List<DailyUVData> daily
+        Dashboard dashboard,
+        List<Next23HoursUltravioletLevel> next23HoursUltravioletLevels,
+        List<NextFewDaysUltravioletLevel> nextFewDaysUltravioletLevels
 ) {
-    public record Coord(Double lon, Double lat) {}
-
-    public record HourlyUVData(
-            Long dt,
-            Double uvi
-    ) {}
-
-    public record DailyUVData(
-            Long dt,
-            Double uvi
-    ) {}
 }

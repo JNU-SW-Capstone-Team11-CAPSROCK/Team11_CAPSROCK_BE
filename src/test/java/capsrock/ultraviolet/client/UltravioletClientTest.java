@@ -13,7 +13,7 @@ public class UltravioletClientTest {
 
     @Test
     @DisplayName("자외선 정보")
-    void getUltravioletResponse() {
+    void getUltravioletApiResponseTest() {
         System.out.println("fineDustInfoClient.getWeatherInfo(new Grid(60, 125)) = "
                 + ultravioletInfoClient.getUltravioletResponse(35.0759421018392, 126.774759454703));
     }

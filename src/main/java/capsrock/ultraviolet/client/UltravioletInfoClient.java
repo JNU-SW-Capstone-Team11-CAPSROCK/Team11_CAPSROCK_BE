@@ -1,8 +1,7 @@
 package capsrock.ultraviolet.client;
 
-import capsrock.fineDust.dto.response.FineDustApiResponse;
 import capsrock.ultraviolet.config.UltravioletRequestConfig;
-import capsrock.ultraviolet.dto.response.UltravioletResponse;
+import capsrock.ultraviolet.dto.response.UltravioletApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -17,7 +16,7 @@ public class UltravioletInfoClient {
     private final RestClient restClient = RestClient.builder().build();
     private final UltravioletRequestConfig ultravioletRequestConfig;
 
-    public UltravioletResponse getUltravioletResponse(Double latitude, Double longitude) {
+    public UltravioletApiResponse getUltravioletResponse(Double latitude, Double longitude) {
 
         String httpUrl = ultravioletRequestConfig.baseRequestUrl();
 
@@ -31,12 +30,10 @@ public class UltravioletInfoClient {
                 .build()
                 .toUriString();
 
-        System.out.println(uriString);
-
         return restClient
                 .get()
                 .uri(URI.create(uriString))
                 .retrieve()
-                .toEntity(UltravioletResponse.class).getBody();
+                .toEntity(UltravioletApiResponse.class).getBody();
     }
 }
