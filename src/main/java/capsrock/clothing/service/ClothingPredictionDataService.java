@@ -41,8 +41,7 @@ public class ClothingPredictionDataService {
                 memberId, Status.PENDING);
 
         if (prediction == null) {
-            throw new PendingFeedbackNotFoundException(
-                    "Id가 %d이고 PENDING인 예측 데이터를 찾을 수 없습니다.".formatted(memberId));
+            throw new PendingFeedbackNotFoundException("PENDING인 예측 데이터를 찾을 수 없습니다.");
         }
 
         PredictionInfoDTO predictionInfoDTO = mapToPredictionInfoDTO(prediction);
