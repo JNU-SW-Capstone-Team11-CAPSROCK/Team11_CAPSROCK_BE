@@ -10,15 +10,13 @@ import capsrock.ultraviolet.dto.response.UltravioletResponse;
 import capsrock.ultraviolet.dto.service.Dashboard;
 import capsrock.ultraviolet.dto.service.Next23HoursUltravioletLevel;
 import capsrock.ultraviolet.dto.service.NextFewDaysUltravioletLevel;
+import capsrock.ultraviolet.util.UvIndexLevelConverter;
 import capsrock.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.LinkedHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -53,44 +51,20 @@ public class UltravioletService {
                 .sorted(Comparator.comparingLong(UltravioletApiResponse.HourlyUVData::dt))
                 .map(data -> new Next23HoursUltravioletLevel(
                         TimeUtil.convertUnixTimeStamp(data.dt()),
-                        data.uvi()
+                        UvIndexLevelConverter.convertUvIndexToLevel(data.uvi())
                 ))
                 .collect(Collectors.toList());
     }
 
     private List<NextFewDaysUltravioletLevel> getNextFewDaysUltravioletLevels(UltravioletApiResponse response) {
-        // Group hourly data by date string (yyyy-MM-dd)
-        Map<String, List<UltravioletApiResponse.HourlyUVData>> hourlyByDate = response.hourly().stream()
-                .collect(Collectors.groupingBy(h -> TimeUtil.convertUnixTimeStamp(h.dt()).substring(0, 10)));
-
         return response.daily().stream()
                 .sorted(Comparator.comparingLong(UltravioletApiResponse.DailyUVData::dt))
-                .map(daily -> {
-                    String dateKey = TimeUtil.convertUnixTimeStamp(daily.dt()).substring(0, 10);
-                    List<UltravioletApiResponse.HourlyUVData> dailyHourly = hourlyByDate.get(dateKey);
-                    Map<String, Double> uvMap;
-                    if (dailyHourly != null && !dailyHourly.isEmpty()) {
-                        // Map each hour to its UVI value
-                        uvMap = dailyHourly.stream()
-                                .sorted(Comparator.comparingLong(UltravioletApiResponse.HourlyUVData::dt))
-                                .collect(Collectors.toMap(
-                                        data -> TimeUtil.convertUnixTimeStamp(data.dt()).substring(11),
-                                        UltravioletApiResponse.HourlyUVData::uvi,
-                                        (existing, replacement) -> existing,
-                                        LinkedHashMap::new
-                                ));
-                    } else {
-                        // No hourly data: provide default times
-                        uvMap = Map.of(
-                                "00:00", 0.0,
-                                TimeUtil.convertUnixTimeStamp(daily.dt()).substring(11), daily.uvi()
-                        );
-                    }
-                    return new NextFewDaysUltravioletLevel(
-                            TimeUtil.convertUnixTimeStamp(daily.dt()),
-                            TimeUtil.getDayOfWeek(TimeUtil.convertUnixTimeStamp(daily.dt())),
-                            uvMap);
-                })
+                .map(data -> new NextFewDaysUltravioletLevel(
+                        TimeUtil.convertUnixTimeStamp(data.dt()),
+                        TimeUtil.getDayOfWeek(TimeUtil.convertUnixTimeStamp(data.dt())),
+                        Arrays.asList(0, UvIndexLevelConverter.convertUvIndexToLevel(data.uvi())
+                        )
+                ))
                 .collect(Collectors.toList());
     }
 

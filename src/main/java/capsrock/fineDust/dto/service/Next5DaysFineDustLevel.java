@@ -1,10 +1,11 @@
 package capsrock.fineDust.dto.service;
 
 import java.util.List;
+import java.util.Map;
 
 public record Next5DaysFineDustLevel(
         String day,
         String dayOfWeek,
-        List<Integer> dailyFineDustLevel
+        Map<String, Integer> dailyFineDustLevel
 ) {
 }
