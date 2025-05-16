@@ -10,6 +10,7 @@ import capsrock.ultraviolet.dto.response.UltravioletResponse;
 import capsrock.ultraviolet.dto.service.Dashboard;
 import capsrock.ultraviolet.dto.service.Next23HoursUltravioletLevel;
 import capsrock.ultraviolet.dto.service.NextFewDaysUltravioletLevel;
+import capsrock.ultraviolet.util.UvIndexLevelConverter;
 import capsrock.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class UltravioletService {
                 .sorted(Comparator.comparingLong(UltravioletApiResponse.HourlyUVData::dt))
                 .map(data -> new Next23HoursUltravioletLevel(
                         TimeUtil.convertUnixTimeStamp(data.dt()),
-                        data.uvi()
+                        UvIndexLevelConverter.convertUvIndexToLevel(data.uvi())
                 ))
                 .collect(Collectors.toList());
     }
@@ -61,7 +62,8 @@ public class UltravioletService {
                 .map(data -> new NextFewDaysUltravioletLevel(
                         TimeUtil.convertUnixTimeStamp(data.dt()),
                         TimeUtil.getDayOfWeek(TimeUtil.convertUnixTimeStamp(data.dt())),
-                        Arrays.asList(0.0, data.uvi())
+                        Arrays.asList(0, UvIndexLevelConverter.convertUvIndexToLevel(data.uvi())
+                        )
                 ))
                 .collect(Collectors.toList());
     }

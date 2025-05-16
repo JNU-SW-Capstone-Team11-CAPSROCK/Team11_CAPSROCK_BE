@@ -4,6 +4,6 @@ import capsrock.location.geocoding.dto.service.AddressDTO;
 
 public record Dashboard(
         AddressDTO address,
-        Double ultravioletLevel
+        Integer ultravioletLevel
 ) {
 }

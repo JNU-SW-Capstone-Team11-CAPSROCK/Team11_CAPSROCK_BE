@@ -5,6 +5,6 @@ import java.util.List;
 public record NextFewDaysUltravioletLevel(
         String day,
         String dayOfWeek,
-        List<Double> ultravioletLevels
+        List<Integer> ultravioletLevels
 ) {
 }
