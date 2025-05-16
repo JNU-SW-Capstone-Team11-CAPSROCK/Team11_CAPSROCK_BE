@@ -19,6 +19,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -67,25 +69,57 @@ public class FineDustService {
         return response.list().stream()
                 .collect(Collectors.groupingBy(data -> {
                     String fullTime = TimeUtil.convertUnixTimeStamp(data.dt());
-                    return fullTime.substring(0, 10);
+                    return fullTime.substring(0, 10); // 날짜만 추출
                 }, TreeMap::new, Collectors.toList()))
                 .entrySet().stream()
                 .map(entry -> {
 
                     String date = entry.getKey();
                     String representativeTime = date + " 00:00:00";
-
                     String dayOfWeek = TimeUtil.getDayOfWeek(representativeTime);
 
-                    List<Integer> dailyLevels = entry.getValue().stream()
+                    // Map<"13:00", 1> 형태로 구성
+                    Map<String, Integer> dailyLevels = entry.getValue().stream()
                             .sorted(Comparator.comparingLong(FineDustApiResponse.FineDustData::dt))
-                            .map(data -> data.main().aqi())
-                            .collect(Collectors.toList());
+                            .collect(Collectors.toMap(
+                                    data -> {
+                                        String fullTime = TimeUtil.convertUnixTimeStamp(data.dt());
+                                        return fullTime.substring(11, 16); // "HH:mm"
+                                    },
+                                    data -> data.main().aqi(),
+                                    (v1, v2) -> v1, // 중복 키 처리: 첫 번째 값 유지
+                                    LinkedHashMap::new // 순서 유지
+                            ));
 
                     return new Next5DaysFineDustLevel(representativeTime, dayOfWeek, dailyLevels);
                 })
                 .collect(Collectors.toList());
     }
+
+
+//    public List<Next5DaysFineDustLevel> getNextFewDaysLevels(FineDustApiResponse response) {
+//        return response.list().stream()
+//                .collect(Collectors.groupingBy(data -> {
+//                    String fullTime = TimeUtil.convertUnixTimeStamp(data.dt());
+//                    return fullTime.substring(0, 10);
+//                }, TreeMap::new, Collectors.toList()))
+//                .entrySet().stream()
+//                .map(entry -> {
+//
+//                    String date = entry.getKey();
+//                    String representativeTime = date + " 00:00:00";
+//
+//                    String dayOfWeek = TimeUtil.getDayOfWeek(representativeTime);
+//
+//                    List<Integer> dailyLevels = entry.getValue().stream()
+//                            .sorted(Comparator.comparingLong(FineDustApiResponse.FineDustData::dt))
+//                            .map(data -> data.main().aqi())
+//                            .collect(Collectors.toList());
+//
+//                    return new Next5DaysFineDustLevel(representativeTime, dayOfWeek, dailyLevels);
+//                })
+//                .collect(Collectors.toList());
+//    }
 
 
 
