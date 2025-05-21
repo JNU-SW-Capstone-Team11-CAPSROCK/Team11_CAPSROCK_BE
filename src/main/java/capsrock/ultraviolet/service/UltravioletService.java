@@ -1,5 +1,8 @@
 package capsrock.ultraviolet.service;
 
+import capsrock.common.dto.OpenWeatherAPIErrorResponse;
+import capsrock.common.exception.InternalServerException;
+import capsrock.common.exception.InvalidLatitudeLongitudeException;
 import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import capsrock.location.geocoding.dto.service.AddressDTO;
 import capsrock.location.geocoding.service.GeocodingService;
@@ -13,7 +16,11 @@ import capsrock.ultraviolet.dto.service.NextFewDaysUltravioletLevel;
 import capsrock.ultraviolet.util.UvIndexLevelConverter;
 import capsrock.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,12 +31,11 @@ public class UltravioletService {
 
     private final UltravioletInfoClient ultravioletInfoClient;
     private final GeocodingService geocodingService;
+    private static final Logger logger = LoggerFactory.getLogger(UltravioletService.class);
 
     public UltravioletResponse getUltravioletResponse(UltravioletRequest ultravioletRequest) {
 
-        UltravioletApiResponse ultravioletApiResponse = ultravioletInfoClient.getUltravioletResponse(
-                    ultravioletRequest.latitude(), ultravioletRequest.longitude()
-        );
+        UltravioletApiResponse ultravioletApiResponse = getUltravioletApiResponse(ultravioletRequest);
 
         AddressDTO addressDTO = getAddressFromGPS(
                 ultravioletRequest.longitude(), ultravioletRequest.latitude());
@@ -45,6 +51,34 @@ public class UltravioletService {
                 nextFewDaysUltravioletLevels
         );
     }
+
+    private UltravioletApiResponse getUltravioletApiResponse(UltravioletRequest ultravioletRequest) {
+        try{
+            return  ultravioletInfoClient.getUltravioletResponse(ultravioletRequest.latitude(), ultravioletRequest.longitude());
+        } catch (HttpClientErrorException e) {
+            handleClientError(e);
+        } catch (HttpServerErrorException e) {
+            handleServerError(e);
+        }
+
+        throw new InternalServerException("자외선 API 처리 중 예외 발생");
+    }
+
+    private void handleClientError(HttpClientErrorException e) {
+        OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(OpenWeatherAPIErrorResponse.class);
+        if(Objects.requireNonNull(openWeatherAPIErrorResponse).cod() == 400) {
+            throw new InvalidLatitudeLongitudeException("잘못된 위도, 경도입니다.");
+        }
+        logger.error(openWeatherAPIErrorResponse.toString());
+        throw new InternalServerException("자외선 API 에러 발생");
+    }
+
+    private void handleServerError(HttpServerErrorException e) {
+        OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(OpenWeatherAPIErrorResponse.class);
+        logger.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
+        throw new InternalServerException("자외선 API 에러 발생");
+    }
+
 
     private List<Next23HoursUltravioletLevel> getNext23HoursUltravioletLevels(UltravioletApiResponse response) {
         return response.hourly().stream()

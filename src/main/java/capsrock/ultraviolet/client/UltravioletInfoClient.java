@@ -35,5 +35,6 @@ public class UltravioletInfoClient {
                 .uri(URI.create(uriString))
                 .retrieve()
                 .toEntity(UltravioletApiResponse.class).getBody();
-    }
+
+        }
 }
