@@ -7,6 +7,7 @@ import capsrock.fineDust.dto.response.FineDustResponse;
 import capsrock.fineDust.dto.service.Dashboard;
 import capsrock.fineDust.dto.service.Next23HoursFineDustLevel;
 import capsrock.fineDust.dto.service.Next5DaysFineDustLevel;
+import capsrock.fineDust.exception.FineDustParsingException;
 import capsrock.fineDust.util.AirQualityLevelConverter;
 import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import capsrock.location.geocoding.dto.service.AddressDTO;
@@ -33,6 +34,10 @@ public class FineDustService {
 
         FineDustApiResponse fineDustApiResponse = fineDustInfoClient.getFineDustResponse(
                 fineDustRequest.latitude(), fineDustRequest.longitude());
+
+        if (fineDustApiResponse == null || fineDustApiResponse.list() == null || fineDustApiResponse.list().isEmpty()) {
+            throw new FineDustParsingException("미세먼지 API 응답 데이터가 유효하지 않습니다.");
+        }
 
         AddressDTO addressDTO = getAddressFromGPS(fineDustRequest.longitude(),
                 fineDustRequest.latitude());
@@ -78,50 +83,22 @@ public class FineDustService {
                     String representativeTime = date + " 00:00:00";
                     String dayOfWeek = TimeUtil.getDayOfWeek(representativeTime);
 
-                    // Map<"13:00", 1> 형태로 구성
                     Map<String, Integer> dailyLevels = entry.getValue().stream()
                             .sorted(Comparator.comparingLong(FineDustApiResponse.FineDustData::dt))
                             .collect(Collectors.toMap(
                                     data -> {
                                         String fullTime = TimeUtil.convertUnixTimeStamp(data.dt());
-                                        return fullTime.substring(11, 16); // "HH:mm"
+                                        return fullTime.substring(11, 16);
                                     },
                                     data -> data.main().aqi(),
-                                    (v1, v2) -> v1, // 중복 키 처리: 첫 번째 값 유지
-                                    LinkedHashMap::new // 순서 유지
+                                    (v1, v2) -> v1,
+                                    LinkedHashMap::new
                             ));
 
                     return new Next5DaysFineDustLevel(representativeTime, dayOfWeek, dailyLevels);
                 })
                 .collect(Collectors.toList());
     }
-
-
-//    public List<Next5DaysFineDustLevel> getNextFewDaysLevels(FineDustApiResponse response) {
-//        return response.list().stream()
-//                .collect(Collectors.groupingBy(data -> {
-//                    String fullTime = TimeUtil.convertUnixTimeStamp(data.dt());
-//                    return fullTime.substring(0, 10);
-//                }, TreeMap::new, Collectors.toList()))
-//                .entrySet().stream()
-//                .map(entry -> {
-//
-//                    String date = entry.getKey();
-//                    String representativeTime = date + " 00:00:00";
-//
-//                    String dayOfWeek = TimeUtil.getDayOfWeek(representativeTime);
-//
-//                    List<Integer> dailyLevels = entry.getValue().stream()
-//                            .sorted(Comparator.comparingLong(FineDustApiResponse.FineDustData::dt))
-//                            .map(data -> data.main().aqi())
-//                            .collect(Collectors.toList());
-//
-//                    return new Next5DaysFineDustLevel(representativeTime, dayOfWeek, dailyLevels);
-//                })
-//                .collect(Collectors.toList());
-//    }
-
-
 
 
     private AddressDTO getAddressFromGPS(Double longitude, Double latitude) {

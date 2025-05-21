@@ -10,6 +10,7 @@ import capsrock.ultraviolet.dto.response.UltravioletResponse;
 import capsrock.ultraviolet.dto.service.Dashboard;
 import capsrock.ultraviolet.dto.service.Next23HoursUltravioletLevel;
 import capsrock.ultraviolet.dto.service.NextFewDaysUltravioletLevel;
+import capsrock.ultraviolet.exception.UltravioletParsingException;
 import capsrock.ultraviolet.util.UvIndexLevelConverter;
 import capsrock.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,11 @@ public class UltravioletService {
         UltravioletApiResponse ultravioletApiResponse = ultravioletInfoClient.getUltravioletResponse(
                     ultravioletRequest.latitude(), ultravioletRequest.longitude()
         );
+
+        if (ultravioletApiResponse == null || ultravioletApiResponse.daily() == null || ultravioletApiResponse.hourly() == null
+            || ultravioletApiResponse.daily().isEmpty() || ultravioletApiResponse.hourly().isEmpty()) {
+            throw new UltravioletParsingException("미세먼지 API 응답 데이터가 유효하지 않습니다.");
+        }
 
         AddressDTO addressDTO = getAddressFromGPS(
                 ultravioletRequest.longitude(), ultravioletRequest.latitude());
