@@ -3,16 +3,15 @@ package capsrock.member.dto.service;
 import capsrock.member.model.entity.Member;
 import capsrock.member.model.vo.Email;
 import capsrock.member.model.vo.EncryptedPassword;
-import capsrock.member.model.vo.Nickname;
 import capsrock.member.model.vo.RecentLocation;
 
 public record MemberInfoDTO(
-        Long id, Email email, Nickname nickname, EncryptedPassword encryptedPassword,
+        Long id, Email email, EncryptedPassword encryptedPassword,
         RecentLocation recentLocation
 ) {
 
     public static MemberInfoDTO from(Member member) {
-        return new MemberInfoDTO(member.getId(), member.getEmail(), member.getNickname(),
+        return new MemberInfoDTO(member.getId(), member.getEmail(),
                 member.getEncryptedPassword(), member.getRecentLocation());
     }
 
