@@ -1,6 +1,7 @@
 package capsrock.weather.controller;
 
 import capsrock.weather.dto.request.WeatherRequest;
+import capsrock.weather.dto.response.WeatherNowResponse;
 import capsrock.weather.dto.response.WeatherResponse;
 import capsrock.weather.service.WeatherService;
 import lombok.RequiredArgsConstructor;
@@ -20,5 +21,10 @@ public class WeatherController {
     @GetMapping
     public ResponseEntity<WeatherResponse> getWeather(WeatherRequest weatherRequest){
         return new ResponseEntity<>(weatherService.getWeather(weatherRequest), HttpStatus.OK);
+    }
+
+    @GetMapping("/WeatherNow")
+    public ResponseEntity<WeatherNowResponse> getWeatherNow(WeatherRequest weatherRequest){
+        return new ResponseEntity<>(weatherService.getWeatherNow(weatherRequest), HttpStatus.OK);
     }
 }

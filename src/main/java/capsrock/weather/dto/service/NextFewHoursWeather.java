@@ -1,6 +1,6 @@
 package capsrock.weather.dto.service;
 
-public record Next23HoursWeather(
+public record NextFewHoursWeather(
         String time,
         Integer weather,
         Double temp,

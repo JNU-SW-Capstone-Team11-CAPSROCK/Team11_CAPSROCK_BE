@@ -5,7 +5,7 @@ import capsrock.common.exception.InternalServerException;
 import capsrock.common.exception.InvalidLatitudeLongitudeException;
 import capsrock.ultraviolet.service.UltravioletService;
 import capsrock.weather.client.WeatherInfoClient;
-import capsrock.weather.dto.service.Next23HoursWeather;
+import capsrock.weather.dto.service.NextFewHoursWeather;
 import capsrock.weather.dto.response.HourlyWeatherResponse;
 import capsrock.weather.dto.response.HourlyWeatherResponse.Rain;
 import capsrock.weather.dto.response.HourlyWeatherResponse.Snow;
@@ -31,11 +31,11 @@ public class HourlyWeatherService {
     private static final Logger logger = LoggerFactory.getLogger(UltravioletService.class);
 
 
-    public List<Next23HoursWeather> getHourlyWeather(Double latitude, Double longitude) {
+    public List<NextFewHoursWeather> getHourlyWeather(Double latitude, Double longitude, Integer hours) {
 
-        HourlyWeatherResponse hourlyWeatherResponse = getHourlyWeatherResponse(latitude, longitude);
+        HourlyWeatherResponse hourlyWeatherResponse = getHourlyWeatherResponse(latitude, longitude, hours);
 
-        List<Next23HoursWeather> next23HoursWeatherList = hourlyWeatherResponse.list().stream()
+        List<NextFewHoursWeather> nextFewHoursWeatherList = hourlyWeatherResponse.list().stream()
                 .map(weatherData -> {
                     WeatherEnum weatherEnum = WeatherEnum.fromCode(
                             weatherData.weather().getFirst().id());
@@ -45,7 +45,7 @@ public class HourlyWeatherService {
                                     .map(Snow::oneHour)
                                     .orElse(0.0));
 
-                    return new Next23HoursWeather(
+                    return new NextFewHoursWeather(
                             TimeUtil.convertUnixTimeStamp(weatherData.dtTxt()),
                             weatherEnum.getId(),
                             weatherData.main().temp(),
@@ -53,15 +53,15 @@ public class HourlyWeatherService {
                             precipitation
                     );
                 })
-                .sorted(Comparator.comparing(Next23HoursWeather::time))
+                .sorted(Comparator.comparing(NextFewHoursWeather::time))
                 .toList();
 
-        return next23HoursWeatherList;
+        return nextFewHoursWeatherList;
     }
 
-    private HourlyWeatherResponse getHourlyWeatherResponse(Double latitude, Double longitude) {
+    private HourlyWeatherResponse getHourlyWeatherResponse(Double latitude, Double longitude, Integer hours) {
         try {
-            return weatherInfoClient.getHourlyWeatherResponse(latitude, longitude);
+            return weatherInfoClient.getHourlyWeatherResponse(latitude, longitude, hours);
         } catch (HttpClientErrorException e) {
             handleClientError(e);
         } catch (HttpServerErrorException e) {
