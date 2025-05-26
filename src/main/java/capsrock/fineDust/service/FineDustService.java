@@ -1,5 +1,8 @@
 package capsrock.fineDust.service;
 
+import capsrock.common.dto.OpenWeatherAPIErrorResponse;
+import capsrock.common.exception.InternalServerException;
+import capsrock.common.exception.InvalidLatitudeLongitudeException;
 import capsrock.fineDust.client.FineDustInfoClient;
 import capsrock.fineDust.dto.request.FineDustRequest;
 import capsrock.fineDust.dto.response.FineDustApiResponse;
@@ -11,13 +14,16 @@ import capsrock.fineDust.util.AirQualityLevelConverter;
 import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import capsrock.location.geocoding.dto.service.AddressDTO;
 import capsrock.location.geocoding.service.GeocodingService;
+import capsrock.ultraviolet.service.UltravioletService;
 import capsrock.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,11 +32,12 @@ public class FineDustService {
 
     private final FineDustInfoClient fineDustInfoClient;
     private final GeocodingService geocodingService;
+    private static final Logger logger = LoggerFactory.getLogger(UltravioletService.class);
+
 
     public FineDustResponse getFineDustResponse(FineDustRequest fineDustRequest) {
 
-        FineDustApiResponse fineDustApiResponse = fineDustInfoClient.getFineDustResponse(
-                fineDustRequest.latitude(), fineDustRequest.longitude());
+        FineDustApiResponse fineDustApiResponse = getFineDustApiResponse(fineDustRequest);
 
         AddressDTO addressDTO = getAddressFromGPS(fineDustRequest.longitude(),
                 fineDustRequest.latitude());
@@ -40,6 +47,8 @@ public class FineDustService {
                 AirQualityLevelConverter.convertPm10ToLevel(fineDustApiResponse.list().getFirst().components().pm10()),
                 AirQualityLevelConverter.convertPm25ToLevel(fineDustApiResponse.list().getFirst().components().pm2_5())
         );
+
+
 
         List<Next23HoursFineDustLevel> next23HoursFineDustLevels = getNext23HoursLevels(fineDustApiResponse);
 
@@ -52,7 +61,33 @@ public class FineDustService {
         );
     }
 
-    public List<Next23HoursFineDustLevel> getNext23HoursLevels(FineDustApiResponse response) {
+    private FineDustApiResponse getFineDustApiResponse(FineDustRequest fineDustRequest) {
+        try{
+            return fineDustInfoClient.getFineDustResponse(fineDustRequest.latitude(), fineDustRequest.longitude());
+        } catch(HttpClientErrorException e){
+            handleClientError(e);
+        } catch(HttpServerErrorException e){
+            handleServerError(e);
+        }
+        throw new InternalServerException("미세먼지 API 처리 중 예외 발생");
+    }
+
+    private void handleClientError(HttpClientErrorException e) {
+        OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(OpenWeatherAPIErrorResponse.class);
+        if(Objects.requireNonNull(openWeatherAPIErrorResponse).cod() == 400) {
+            throw new InvalidLatitudeLongitudeException("잘못된 위도, 경도입니다.");
+        }
+        logger.error(openWeatherAPIErrorResponse.toString());
+        throw new InternalServerException("미세먼지 API 에러 발생");
+    }
+
+    private void handleServerError(HttpServerErrorException e) {
+        OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(OpenWeatherAPIErrorResponse.class);
+        logger.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
+        throw new InternalServerException("미세먼지 API 에러 발생");
+    }
+
+    private List<Next23HoursFineDustLevel> getNext23HoursLevels(FineDustApiResponse response) {
         return response.list().stream()
                 .sorted(Comparator.comparingLong(FineDustApiResponse.FineDustData::dt))
                 .limit(24)
@@ -63,31 +98,35 @@ public class FineDustService {
                 .collect(Collectors.toList());
     }
 
-    public List<Next5DaysFineDustLevel> getNextFewDaysLevels(FineDustApiResponse response) {
+    private List<Next5DaysFineDustLevel> getNextFewDaysLevels(FineDustApiResponse response) {
         return response.list().stream()
                 .collect(Collectors.groupingBy(data -> {
                     String fullTime = TimeUtil.convertUnixTimeStamp(data.dt());
-                    return fullTime.substring(0, 10);
+                    return fullTime.substring(0, 10); // 날짜만 추출
                 }, TreeMap::new, Collectors.toList()))
                 .entrySet().stream()
                 .map(entry -> {
 
                     String date = entry.getKey();
                     String representativeTime = date + " 00:00:00";
-
                     String dayOfWeek = TimeUtil.getDayOfWeek(representativeTime);
 
-                    List<Integer> dailyLevels = entry.getValue().stream()
+                    Map<String, Integer> dailyLevels = entry.getValue().stream()
                             .sorted(Comparator.comparingLong(FineDustApiResponse.FineDustData::dt))
-                            .map(data -> data.main().aqi())
-                            .collect(Collectors.toList());
+                            .collect(Collectors.toMap(
+                                    data -> {
+                                        String fullTime = TimeUtil.convertUnixTimeStamp(data.dt());
+                                        return fullTime.substring(11, 16);
+                                    },
+                                    data -> data.main().aqi(),
+                                    (v1, v2) -> v1,
+                                    LinkedHashMap::new
+                            ));
 
                     return new Next5DaysFineDustLevel(representativeTime, dayOfWeek, dailyLevels);
                 })
                 .collect(Collectors.toList());
     }
-
-
 
 
     private AddressDTO getAddressFromGPS(Double longitude, Double latitude) {

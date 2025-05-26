@@ -4,7 +4,7 @@ import capsrock.fineDust.config.FineDustRequestConfig;
 import capsrock.fineDust.dto.response.FineDustApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.client.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
@@ -16,12 +16,10 @@ public class FineDustInfoClient {
     private final FineDustRequestConfig fineDustRequestConfig;
     private final RestClient restClient = RestClient.builder().build();
 
-
     public FineDustApiResponse getFineDustResponse(Double latitude, Double longitude) {
 
         String httpUrl = fineDustRequestConfig.baseRequestUrl() +
-                        fineDustRequestConfig.airPollutionPath();
-
+                fineDustRequestConfig.airPollutionPath();
 
         String uriString = UriComponentsBuilder
                 .fromHttpUrl(httpUrl)
@@ -29,13 +27,15 @@ public class FineDustInfoClient {
                 .queryParam("lon", longitude)
                 .queryParam("appid", fineDustRequestConfig.restApiKey())
                 .queryParam("mode", "JSON")
-                .build().toUriString();
-
+                .build()
+                .toUriString();
 
         return restClient
                 .get()
                 .uri(URI.create(uriString))
                 .retrieve()
-                .toEntity(FineDustApiResponse.class).getBody();
+                .toEntity(FineDustApiResponse.class)
+                .getBody();
+
     }
 }

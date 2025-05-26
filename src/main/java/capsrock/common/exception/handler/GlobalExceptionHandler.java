@@ -1,5 +1,7 @@
 package capsrock.common.exception.handler;
 
+import capsrock.common.exception.InternalServerException;
+import capsrock.common.exception.InvalidLatitudeLongitudeException;
 import capsrock.common.exception.dto.response.ErrorResponse;
 import capsrock.member.exception.LoginFailedException;
 import capsrock.member.exception.MemberDuplicatedEmailException;
@@ -90,6 +92,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidLatitudeLongitudeException.class)
+    public ResponseEntity<ErrorResponse> handleInvaildLatitudeLongitudeException(InvalidLatitudeLongitudeException e) {
+        ErrorResponse response = ErrorResponse.builder()
+                .isError(true)
+                .errorMessage("잘못된 위도, 경도입니다.")
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InternalServerException.class)
+    public ResponseEntity<ErrorResponse> handleInternalServerException(InternalServerException e){
+        ErrorResponse response = ErrorResponse.builder()
+                .isError(true)
+                .errorMessage(e.getMessage())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(MemberException.class)
