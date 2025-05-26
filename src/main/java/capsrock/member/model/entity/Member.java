@@ -3,7 +3,6 @@ package capsrock.member.model.entity;
 import capsrock.common.model.BaseEntity;
 import capsrock.member.model.vo.Email;
 import capsrock.member.model.vo.EncryptedPassword;
-import capsrock.member.model.vo.Nickname;
 import capsrock.member.model.vo.RecentLocation;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
@@ -34,10 +33,6 @@ public class Member extends BaseEntity {
     private Email email;
 
     @Embedded
-    @AttributeOverride(name = "value", column = @Column(name = "nickname", nullable = false, unique = true))
-    private Nickname nickname;
-
-    @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "password", nullable = false))
     private EncryptedPassword encryptedPassword;
 
@@ -46,10 +41,9 @@ public class Member extends BaseEntity {
     private RecentLocation recentLocation;
 
     @Builder
-    public Member(String email, String nickname, String encryptedPassword, Double longitude,
+    public Member(String email, String encryptedPassword, Double longitude,
             Double latitude) {
         this.email = new Email(email);
-        this.nickname = new Nickname(nickname);
         this.encryptedPassword = new EncryptedPassword(encryptedPassword);
         this.recentLocation = new RecentLocation(longitude, latitude);
     }

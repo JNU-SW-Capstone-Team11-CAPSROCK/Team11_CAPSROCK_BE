@@ -68,7 +68,6 @@ public class MemberService {
                 .builder()
                 .email(registerRequest.email())
                 .encryptedPassword(passwordEncoder.encode(plainPassword.value()))
-                .nickname(registerRequest.nickname())
                 .latitude(registerRequest.latitude())
                 .longitude(registerRequest.longitude())
                 .build();

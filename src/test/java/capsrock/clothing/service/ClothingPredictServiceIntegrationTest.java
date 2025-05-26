@@ -73,7 +73,6 @@ public class ClothingPredictServiceIntegrationTest {
         testMember = Member.builder()
                 .email("123@12312.com")
                 .encryptedPassword("$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG")
-                .nickname("213")
                 .latitude(126.9779692)
                 .longitude(37.566535)
                 .build();
@@ -193,7 +192,6 @@ public class ClothingPredictServiceIntegrationTest {
         Member newMember = Member.builder()
                 .email("123@12312.com")
                 .encryptedPassword("$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG")
-                .nickname("213")
                 .latitude(126.9779692)
                 .longitude(37.566535)
                 .build();

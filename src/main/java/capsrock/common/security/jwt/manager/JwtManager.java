@@ -41,7 +41,6 @@ public class JwtManager {
         return Jwts.builder()
                 .subject(memberInfoDTO.id().toString())
                 .claim("email", memberInfoDTO.email().value())
-                .claim("nickname", memberInfoDTO.nickname().value())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + EXPIRED_MILLIS))
                 .signWith(this.key)
