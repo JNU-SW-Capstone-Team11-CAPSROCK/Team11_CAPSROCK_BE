@@ -23,7 +23,7 @@ public class WeatherController {
         return new ResponseEntity<>(weatherService.getWeather(weatherRequest), HttpStatus.OK);
     }
 
-    @GetMapping("/WeatherNow")
+    @GetMapping("/weatherNow")
     public ResponseEntity<WeatherNowResponse> getWeatherNow(WeatherRequest weatherRequest){
         return new ResponseEntity<>(weatherService.getWeatherNow(weatherRequest), HttpStatus.OK);
     }
