@@ -18,7 +18,7 @@ public class WeatherInfoClient {
     private final WeatherRequestConfig weatherRequestConfig;
     private final RestClient restClient = RestClient.builder().build();
 
-    public HourlyWeatherResponse getHourlyWeatherResponse(Double latitude, Double longitude) {
+    public HourlyWeatherResponse getHourlyWeatherResponse(Double latitude, Double longitude, Integer hours) {
         String httpUrl = weatherRequestConfig.baseRequestUrl() + weatherRequestConfig.forecastPath()
                 + weatherRequestConfig.hourlyPath();
 
@@ -28,7 +28,7 @@ public class WeatherInfoClient {
                 .queryParam("lon", longitude)
                 .queryParam("appid", weatherRequestConfig.restApiKey())
                 .queryParam("mode", "JSON")
-                .queryParam("cnt", "23")
+                .queryParam("cnt", hours)
                 .queryParam("lang", "kr")
                 .queryParam("units", "metric")
                 .build().toUriString();
