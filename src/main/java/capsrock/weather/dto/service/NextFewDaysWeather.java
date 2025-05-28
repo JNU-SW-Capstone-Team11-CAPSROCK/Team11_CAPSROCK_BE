@@ -6,7 +6,7 @@ public record NextFewDaysWeather(
         Double maxTemp,
         Double minTemp,
         Integer weather,
-        String rainOrSnowPossibility,
+        Long rainOrSnowPossibility,
         Double rainOrSnowAmount
 ) {
 }
