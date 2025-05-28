@@ -3,7 +3,6 @@ package capsrock.weather.service;
 import capsrock.common.dto.OpenWeatherAPIErrorResponse;
 import capsrock.common.exception.InternalServerException;
 import capsrock.common.exception.InvalidLatitudeLongitudeException;
-import capsrock.ultraviolet.service.UltravioletService;
 import capsrock.weather.client.WeatherInfoClient;
 import capsrock.weather.dto.service.NextFewHoursWeather;
 import capsrock.weather.dto.response.HourlyWeatherResponse;
@@ -17,23 +16,24 @@ import java.util.Objects;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class HourlyWeatherService {
 
     private final WeatherInfoClient weatherInfoClient;
-    private static final Logger logger = LoggerFactory.getLogger(UltravioletService.class);
 
 
-    public List<NextFewHoursWeather> getHourlyWeather(Double latitude, Double longitude, Integer hours) {
+    public List<NextFewHoursWeather> getHourlyWeather(Double latitude, Double longitude,
+            Integer hours) {
 
-        HourlyWeatherResponse hourlyWeatherResponse = getHourlyWeatherResponse(latitude, longitude, hours);
+        HourlyWeatherResponse hourlyWeatherResponse = getHourlyWeatherResponse(latitude, longitude,
+                hours);
 
         List<NextFewHoursWeather> nextFewHoursWeatherList = hourlyWeatherResponse.list().stream()
                 .map(weatherData -> {
@@ -49,7 +49,7 @@ public class HourlyWeatherService {
                             TimeUtil.convertUnixTimeStamp(weatherData.dtTxt()),
                             weatherEnum.getId(),
                             weatherData.main().temp(),
-                            weatherData.pop() * 100.0 + "%",
+                            Math.round(weatherData.pop() * 100.0),
                             precipitation
                     );
                 })
@@ -59,7 +59,8 @@ public class HourlyWeatherService {
         return nextFewHoursWeatherList;
     }
 
-    private HourlyWeatherResponse getHourlyWeatherResponse(Double latitude, Double longitude, Integer hours) {
+    private HourlyWeatherResponse getHourlyWeatherResponse(Double latitude, Double longitude,
+            Integer hours) {
         try {
             return weatherInfoClient.getHourlyWeatherResponse(latitude, longitude, hours);
         } catch (HttpClientErrorException e) {
@@ -72,17 +73,17 @@ public class HourlyWeatherService {
     }
 
     private void handleClientError(HttpClientErrorException e) {
-        OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(OpenWeatherAPIErrorResponse.class);
-        if(Objects.requireNonNull(openWeatherAPIErrorResponse).cod() == 400) {
+        OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(
+                OpenWeatherAPIErrorResponse.class);
+        if (Objects.requireNonNull(openWeatherAPIErrorResponse).cod() == 400) {
             throw new InvalidLatitudeLongitudeException("잘못된 위도, 경도입니다.");
         }
-        logger.error(openWeatherAPIErrorResponse.toString());
         throw new InternalServerException("날씨 API 에러 발생");
     }
 
     private void handleServerError(HttpServerErrorException e) {
-        OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(OpenWeatherAPIErrorResponse.class);
-        logger.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
+        OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(
+                OpenWeatherAPIErrorResponse.class);
         throw new InternalServerException("날씨 API 에러 발생");
     }
 
