@@ -1,5 +1,7 @@
 package capsrock.common.security.exception.handler;
 
+import static capsrock.common.constants.CommonConstants.CRITICAL_ERROR_MESSAGE;
+
 import capsrock.common.exception.dto.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,10 +12,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 @Component
-public class Rest401Handler implements AuthenticationEntryPoint {
-
-    private static final String UNAUTHORIZED_EXCEPTION_MESSAGE = "인증이 필요합니다.";
-
+public class Rest500Handler implements AuthenticationEntryPoint {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
@@ -24,6 +23,6 @@ public class Rest401Handler implements AuthenticationEntryPoint {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        objectMapper.writeValue(response.getWriter(), new ErrorResponse(true, UNAUTHORIZED_EXCEPTION_MESSAGE));
+        objectMapper.writeValue(response.getWriter(), new ErrorResponse(true, CRITICAL_ERROR_MESSAGE));
     }
 }
