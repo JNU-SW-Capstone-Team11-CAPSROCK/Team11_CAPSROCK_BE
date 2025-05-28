@@ -1,16 +1,20 @@
 package capsrock.common.security.filter;
 
 
+import static capsrock.common.constants.CommonConstants.CRITICAL_ERROR_MESSAGE;
+
 import capsrock.common.security.dto.CapsrockUserDetails;
+import capsrock.common.security.exception.handler.Rest401Handler;
+import capsrock.common.security.exception.handler.Rest500Handler;
 import capsrock.common.security.jwt.manager.JwtManager;
 import capsrock.member.dto.service.MemberInfoDTO;
 import capsrock.member.service.MemberService;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -26,12 +30,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final static String BEARER_TYPE = "Bearer ";
     private final JwtManager jwtManager;
     private final ApplicationContext applicationContext;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
+    private final Rest401Handler rest401Handler;
+    private final Rest500Handler rest500Handler;
 
 
     @Override
@@ -44,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain) {
+            FilterChain filterChain) throws IOException {
         try {
             String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
             if (authHeader == null || !authHeader.startsWith(BEARER_TYPE)) {
@@ -62,7 +69,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             CapsrockUserDetails userDetails = new CapsrockUserDetails(memberInfo);
             UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    new UsernamePasswordAuthenticationToken(userDetails, null,
+                            userDetails.getAuthorities());
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(auth);
@@ -70,10 +78,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (AuthenticationException ex) {
             SecurityContextHolder.clearContext();
-            throw ex;
+            rest401Handler.commence(request, response, ex);
         } catch (Exception ex) {
             SecurityContextHolder.clearContext();
-            throw new AuthenticationServiceException("Authentication failed", ex);
+            log.error(CRITICAL_ERROR_MESSAGE, ex);
+            rest500Handler.commence(request, response,
+                    new AuthenticationServiceException(CRITICAL_ERROR_MESSAGE, ex));
         }
     }
 }
