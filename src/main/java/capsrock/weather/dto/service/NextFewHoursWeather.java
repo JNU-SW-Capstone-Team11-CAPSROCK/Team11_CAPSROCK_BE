@@ -4,6 +4,6 @@ public record NextFewHoursWeather(
         String time,
         Integer weather,
         Double temp,
-        String rainOrSnowPossibility,
+        Long rainOrSnowPossibility,
         Double rainOrSnowAmount
 ) { }

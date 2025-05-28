@@ -45,7 +45,7 @@ public class DailyWeatherService {
                             data.temp().max(),
                             data.temp().min(),
                             WeatherEnum.fromCode(data.weather().getFirst().id()).getId(),
-                            data.pop() * 100.0 + "%",
+                            Math.round(data.pop() * 100.0),
                             Optional.ofNullable(data.rain())
                                     .orElse(Optional.ofNullable(data.snow()).orElse(0.0))
                     );
