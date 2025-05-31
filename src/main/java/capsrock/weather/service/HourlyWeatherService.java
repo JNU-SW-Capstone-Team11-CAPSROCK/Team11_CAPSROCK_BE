@@ -78,12 +78,14 @@ public class HourlyWeatherService {
         if (Objects.requireNonNull(openWeatherAPIErrorResponse).cod() == 400) {
             throw new InvalidLatitudeLongitudeException("잘못된 위도, 경도입니다.");
         }
+        log.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
         throw new InternalServerException("날씨 API 에러 발생");
     }
 
     private void handleServerError(HttpServerErrorException e) {
         OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(
                 OpenWeatherAPIErrorResponse.class);
+        log.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
         throw new InternalServerException("날씨 API 에러 발생");
     }
 

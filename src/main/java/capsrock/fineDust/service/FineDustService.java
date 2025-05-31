@@ -14,11 +14,9 @@ import capsrock.fineDust.util.AirQualityLevelConverter;
 import capsrock.location.geocoding.dto.response.ReverseGeocodingResponse;
 import capsrock.location.geocoding.dto.service.AddressDTO;
 import capsrock.location.geocoding.service.GeocodingService;
-import capsrock.ultraviolet.service.UltravioletService;
 import capsrock.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -27,13 +25,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class FineDustService {
 
     private final FineDustInfoClient fineDustInfoClient;
     private final GeocodingService geocodingService;
-    private static final Logger logger = LoggerFactory.getLogger(UltravioletService.class);
-
 
     public FineDustResponse getFineDustResponse(FineDustRequest fineDustRequest) {
 
@@ -77,13 +74,13 @@ public class FineDustService {
         if(Objects.requireNonNull(openWeatherAPIErrorResponse).cod() == 400) {
             throw new InvalidLatitudeLongitudeException("잘못된 위도, 경도입니다.");
         }
-        logger.error(openWeatherAPIErrorResponse.toString());
+        log.error(openWeatherAPIErrorResponse.toString());
         throw new InternalServerException("미세먼지 API 에러 발생");
     }
 
     private void handleServerError(HttpServerErrorException e) {
         OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(OpenWeatherAPIErrorResponse.class);
-        logger.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
+        log.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
         throw new InternalServerException("미세먼지 API 에러 발생");
     }
 

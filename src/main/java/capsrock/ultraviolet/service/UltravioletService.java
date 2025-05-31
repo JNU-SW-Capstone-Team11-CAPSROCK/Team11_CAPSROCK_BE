@@ -16,8 +16,7 @@ import capsrock.ultraviolet.dto.service.NextFewDaysUltravioletLevel;
 import capsrock.ultraviolet.util.UvIndexLevelConverter;
 import capsrock.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -26,12 +25,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UltravioletService {
 
     private final UltravioletInfoClient ultravioletInfoClient;
     private final GeocodingService geocodingService;
-    private static final Logger logger = LoggerFactory.getLogger(UltravioletService.class);
 
     public UltravioletResponse getUltravioletResponse(UltravioletRequest ultravioletRequest) {
 
@@ -69,13 +68,13 @@ public class UltravioletService {
         if(Objects.requireNonNull(openWeatherAPIErrorResponse).cod() == 400) {
             throw new InvalidLatitudeLongitudeException("잘못된 위도, 경도입니다.");
         }
-        logger.error(openWeatherAPIErrorResponse.toString());
+        log.error(openWeatherAPIErrorResponse.toString());
         throw new InternalServerException("자외선 API 에러 발생");
     }
 
     private void handleServerError(HttpServerErrorException e) {
         OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(OpenWeatherAPIErrorResponse.class);
-        logger.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
+        log.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
         throw new InternalServerException("자외선 API 에러 발생");
     }
 
