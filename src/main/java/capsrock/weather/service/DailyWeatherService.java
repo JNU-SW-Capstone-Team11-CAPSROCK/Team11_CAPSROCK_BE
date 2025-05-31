@@ -3,7 +3,6 @@ package capsrock.weather.service;
 import capsrock.common.dto.OpenWeatherAPIErrorResponse;
 import capsrock.common.exception.InternalServerException;
 import capsrock.common.exception.InvalidLatitudeLongitudeException;
-import capsrock.ultraviolet.service.UltravioletService;
 import capsrock.weather.client.WeatherInfoClient;
 import capsrock.weather.dto.service.NextFewDaysWeather;
 import capsrock.weather.dto.response.DailyWeatherResponse;
@@ -15,19 +14,17 @@ import java.util.Objects;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DailyWeatherService {
 
     private final WeatherInfoClient weatherInfoClient;
-    private static final Logger logger = LoggerFactory.getLogger(UltravioletService.class);
-
 
     public List<NextFewDaysWeather> getNextFewDaysWeather(Double latitude, Double longitude, Integer days) {
 //        List<Next7DaysWeather> next7DaysWeatherList = new ArrayList<>();
@@ -73,13 +70,13 @@ public class DailyWeatherService {
         if(Objects.requireNonNull(openWeatherAPIErrorResponse).cod() == 400) {
             throw new InvalidLatitudeLongitudeException("잘못된 위도, 경도입니다.");
         }
-        logger.error(openWeatherAPIErrorResponse.toString());
+        log.error(openWeatherAPIErrorResponse.toString());
         throw new InternalServerException("날씨 API 에러 발생");
     }
 
     private void handleServerError(HttpServerErrorException e) {
         OpenWeatherAPIErrorResponse openWeatherAPIErrorResponse = e.getResponseBodyAs(OpenWeatherAPIErrorResponse.class);
-        logger.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
+        log.error(Objects.requireNonNull(openWeatherAPIErrorResponse).toString());
         throw new InternalServerException("날씨 API 에러 발생");
     }
 
