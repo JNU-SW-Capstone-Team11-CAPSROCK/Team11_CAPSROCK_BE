@@ -11,6 +11,7 @@ import capsrock.clothing.model.vo.Correction;
 import capsrock.location.geocoding.dto.service.AddressDTO;
 import capsrock.location.geocoding.service.GeocodingService;
 import capsrock.member.dto.service.MemberInfoDTO;
+import capsrock.member.service.MemberService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,12 +24,15 @@ public class ClothingRecommendationService {
     private final ClothingPredictionDataService clothingPredictionDataService;
     private final HourlyClothingService hourlyClothingService;
     private final DailyClothingService dailyClothingService;
+    private final MemberService memberService;
 
     public ClothingResponse recommendClothing(MemberInfoDTO memberInfoDTO,
             ClothingPageRequest request) {
 
         AddressDTO addressDTO = geocodingService.getAddressFromGPS(request.longitude(),
                 request.latitude());
+
+        memberService.updateLocation(memberInfoDTO.id(), request.longitude(), request.latitude());
 
         Correction correction = new Correction(0.0, 0.0, 0.0);
 

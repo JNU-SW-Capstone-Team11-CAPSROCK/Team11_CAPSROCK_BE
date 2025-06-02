@@ -2,7 +2,6 @@ package capsrock.weather.service;
 
 import capsrock.location.geocoding.dto.service.AddressDTO;
 import capsrock.location.geocoding.service.GeocodingService;
-import capsrock.weather.client.WeatherInfoClient;
 import capsrock.weather.dto.response.WeatherNowResponse;
 import capsrock.weather.dto.service.Dashboard;
 import capsrock.weather.dto.service.NextFewHoursWeather;
@@ -20,7 +19,6 @@ public class WeatherService {
     private final HourlyWeatherService hourlyWeatherService;
     private final DailyWeatherService dailyWeatherService;
     private final GeocodingService geocodingService;
-    private final WeatherInfoClient weatherInfoClient;
 
     public WeatherResponse getWeather(WeatherRequest weatherRequest) {
 
