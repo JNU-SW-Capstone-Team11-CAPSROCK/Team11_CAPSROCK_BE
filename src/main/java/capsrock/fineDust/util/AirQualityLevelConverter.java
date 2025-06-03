@@ -17,4 +17,8 @@ public class AirQualityLevelConverter {
         if (pm10 <= 200) return 4; // Poor (나쁨)
         return 5; // Very Poor (매우 나쁨) (> 200)
     }
+
+    public static int getAirQualityLevel(double pm25, double pm10) {
+        return Math.max(convertPm25ToLevel(pm25), convertPm10ToLevel(pm10));
+    }
 }
