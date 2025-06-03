@@ -45,8 +45,6 @@ public class FineDustService {
                 AirQualityLevelConverter.convertPm25ToLevel(fineDustApiResponse.list().getFirst().components().pm2_5())
         );
 
-
-
         List<Next23HoursFineDustLevel> next23HoursFineDustLevels = getNext23HoursLevels(fineDustApiResponse);
 
         List<Next5DaysFineDustLevel> nextFewDaysFineDustLevels = getNextFewDaysLevels(fineDustApiResponse);
@@ -90,7 +88,8 @@ public class FineDustService {
                 .limit(24)
                 .map(data -> new Next23HoursFineDustLevel(
                         TimeUtil.convertUnixTimeStamp(data.dt()),
-                        data.main().aqi()
+                        AirQualityLevelConverter.getAirQualityLevel(
+                                data.components().pm2_5(), data.components().pm10())
                 ))
                 .collect(Collectors.toList());
     }
@@ -115,7 +114,8 @@ public class FineDustService {
                                         String fullTime = TimeUtil.convertUnixTimeStamp(data.dt());
                                         return fullTime.substring(11, 16);
                                     },
-                                    data -> data.main().aqi(),
+                                    data -> AirQualityLevelConverter.getAirQualityLevel(
+                                            data.components().pm2_5(), data.components().pm10()),
                                     (v1, v2) -> v1,
                                     LinkedHashMap::new
                             ));
