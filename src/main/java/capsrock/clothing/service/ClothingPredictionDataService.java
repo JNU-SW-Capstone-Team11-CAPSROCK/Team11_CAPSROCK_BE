@@ -68,6 +68,11 @@ public class ClothingPredictionDataService {
         });
     }
 
+    @Transactional(readOnly = true)
+    public List<Long> getMemberIdByPending() {
+        return clothingPredictionRepository.getDistinctMemberIdsByStatus(Status.PENDING);
+    }
+
     @Transactional
     public void saveNewPredictions(List<NewPredictionDataDTO> newPredictions) {
         if (newPredictions.isEmpty()) {
