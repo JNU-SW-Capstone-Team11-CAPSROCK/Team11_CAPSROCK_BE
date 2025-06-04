@@ -46,12 +46,14 @@ public class ClothingPredictService {
                 dataService.archiveCompletedPredictions(completedPredictionIds);
             }
 
+            List<Long> pendingMemberIds = dataService.getMemberIdByPending();
+
             // 3. 사용자별 데이터 집계 (위치, 날씨 포함) - ARCHIVED 상태 데이터 기반
             List<PredictionInfoDTO> processablePredictions = allPredictions.stream()
                     //.filter(p -> p.status().equals(Status.ARCHIVED) || completedPredictionIds.contains(p.predictionId())) // 방금 업데이트된 것도 포함하도록 필터링
-                    .filter(p -> !p.status()
-                            .equals(Status.PENDING)) // PENDING 상태는 제외 (혹은 비즈니스 로직에 따라 조정)
+                    .filter(p -> !pendingMemberIds.contains(p.memberId())) // PENDING 상태는 제외 (혹은 비즈니스 로직에 따라 조정)
                     .toList();
+
             Map<Long, AggregatedUserDataDTO> aggregatedDataMap = aggregationService.aggregateUserData(
                     processablePredictions);
 
