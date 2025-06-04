@@ -95,7 +95,7 @@ public class UltravioletService {
                 .map(data -> new NextFewDaysUltravioletLevel(
                         TimeUtil.convertUnixTimeStamp(data.dt()),
                         TimeUtil.getDayOfWeek(TimeUtil.convertUnixTimeStamp(data.dt())),
-                        Arrays.asList(0, UvIndexLevelConverter.convertUvIndexToLevel(data.uvi())
+                        Arrays.asList(1, UvIndexLevelConverter.convertUvIndexToLevel(data.uvi())
                         )
                 ))
                 .collect(Collectors.toList());
