@@ -103,6 +103,7 @@ public class ClothingPredictService {
 
             // 8. 새로운 예측 결과 저장
             log.info("Saving {} new predictions.", newPredictionsToSave.size());
+            log.info("New predictions: {}", newPredictionsToSave);
             dataService.saveNewPredictions(newPredictionsToSave);
 
             log.info("Scheduled clothing prediction process finished successfully.");
