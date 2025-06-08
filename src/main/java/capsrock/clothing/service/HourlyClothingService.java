@@ -27,7 +27,7 @@ public class HourlyClothingService {
             Correction correction) {
 
         HourlyWeatherResponse response = weatherInfoClient.getHourlyWeatherResponse(
-                latitude, longitude);
+                latitude, longitude, 23);
 
         List<Next23HoursClothingDTO> clothingDTOList = new ArrayList<>();
 

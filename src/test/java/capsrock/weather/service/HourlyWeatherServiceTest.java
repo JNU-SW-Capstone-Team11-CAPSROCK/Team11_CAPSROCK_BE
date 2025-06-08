@@ -15,7 +15,7 @@ class HourlyWeatherServiceTest {
         System.out.println(
                 "hourlyWeatherService.getHourlyWeather(35.0759421018392, 126.774759454703) = "
                         + hourlyWeatherService.getHourlyWeather(35.0759421018392,
-                        126.774759454703));
+                        126.774759454703, 23));
 
     }
 }

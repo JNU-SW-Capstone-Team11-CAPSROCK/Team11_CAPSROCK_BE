@@ -1,11 +1,12 @@
 package capsrock.common.exception.handler;
 
+import capsrock.common.exception.InternalServerException;
+import capsrock.common.exception.InvalidLatitudeLongitudeException;
 import capsrock.common.exception.dto.response.ErrorResponse;
 import capsrock.member.exception.LoginFailedException;
 import capsrock.member.exception.MemberDuplicatedEmailException;
 import capsrock.member.exception.MemberException;
 import capsrock.member.exception.MemberNotFoundException;
-import javax.lang.model.type.ErrorType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -26,9 +26,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final String CRITICAL_ERROR_MESSAGE = "서버에서 예상치 못한 에러가 발생하였습니다.";
 
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException ex) {
         StringBuilder errorMessage = new StringBuilder();
 
         ex.getBindingResult().getAllErrors().forEach(error -> {
@@ -37,8 +41,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             errorMessage.append(fieldName).append(": ").append(message).append("\n");
         });
 
+
         return new ResponseEntity<>(errorMessage.toString(), HttpStatus.BAD_REQUEST);
     }
+
+
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Object> handleMethodArgumentTypeMismatch(
@@ -75,6 +82,34 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
+        ErrorResponse response = ErrorResponse.builder()
+                .isError(true)
+                .errorMessage(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidLatitudeLongitudeException.class)
+    public ResponseEntity<ErrorResponse> handleInvaildLatitudeLongitudeException(InvalidLatitudeLongitudeException e) {
+        ErrorResponse response = ErrorResponse.builder()
+                .isError(true)
+                .errorMessage("잘못된 위도, 경도입니다.")
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InternalServerException.class)
+    public ResponseEntity<ErrorResponse> handleInternalServerException(InternalServerException e){
+        ErrorResponse response = ErrorResponse.builder()
+                .isError(true)
+                .errorMessage(e.getMessage())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(MemberException.class)

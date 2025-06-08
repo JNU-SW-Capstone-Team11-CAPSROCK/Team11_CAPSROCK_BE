@@ -50,7 +50,7 @@ public class MemberService {
             throw new LoginFailedException();
         }
 
-        foundMember.updateLocation(loginRequest.latitude(), loginRequest.longitude());
+        foundMember.updateLocation(loginRequest.longitude(), loginRequest.latitude());
 
         return MemberInfoDTO.from(foundMember);
     }
@@ -68,7 +68,6 @@ public class MemberService {
                 .builder()
                 .email(registerRequest.email())
                 .encryptedPassword(passwordEncoder.encode(plainPassword.value()))
-                .nickname(registerRequest.nickname())
                 .latitude(registerRequest.latitude())
                 .longitude(registerRequest.longitude())
                 .build();
@@ -102,5 +101,13 @@ public class MemberService {
 
         return new RecentLocationDTO(memberInfoDTO.recentLocation().longitude(),
                 memberInfoDTO.recentLocation().latitude());
+    }
+
+    @Transactional
+    public void updateLocation(Long id, Double longitude, Double latitude) {
+        Member member = memberRepository.findById(id).orElseThrow(
+                () -> new MemberNotFoundException("id가 %d인 회원을 찾지 못했습니다.".formatted(id)));
+
+        member.updateLocation(longitude, latitude);
     }
 }

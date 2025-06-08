@@ -19,7 +19,7 @@ public class WeatherInfoClientTest {
     @DisplayName("날씨 정보")
     void getHourlyWeatherResponse() {
         System.out.println("weatherInfoClient.getWeatherInfo(new Grid(60, 125)) = "
-                + weatherInfoClient.getHourlyWeatherResponse(35.0759421018392, 126.774759454703));
+                + weatherInfoClient.getHourlyWeatherResponse(35.0759421018392, 126.774759454703, 23));
     }
 
     @Test
