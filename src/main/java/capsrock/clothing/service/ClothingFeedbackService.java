@@ -25,9 +25,12 @@ public class ClothingFeedbackService {
         if (!havePending(memberInfoDTO.id()))
             throw new PendingFeedbackNotFoundException("대기 중인 피드백이 없습니다.");
 
-        ClothingPrediction prediction = clothingPredictionRepository.findByMemberId(
-                memberInfoDTO.id()).orElseThrow(
-                () -> new MemberNotFoundException("id가 %d인 회원을 찾지 못했습니다.".formatted(memberInfoDTO.id())));
+        ClothingPrediction prediction = clothingPredictionRepository.findByMemberIdAndStatus(
+                memberInfoDTO.id(), Status.PENDING);
+
+        if (prediction == null){
+            throw new MemberNotFoundException("id가 %d인 회원을 찾지 못했습니다.".formatted(memberInfoDTO.id()));
+        }
 
         applyFeedbackToEntity(prediction, clothingFeedbackRequest);
     }
