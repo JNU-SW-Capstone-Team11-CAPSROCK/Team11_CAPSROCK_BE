@@ -36,4 +36,12 @@ public class WeatherInfoClientTest {
                         + weatherInfoClient.getDailyWeatherResponse(35.0759421018392,
                         126.774759454703, 7));
     }
+
+    @Test
+    void getHourlyWeather() {
+        System.out.println(
+                "weatherInfoClient.getHourlyWeatherResponse(35.0759421018392, 126.774759454703) = "
+                        + weatherInfoClient.getHourlyWeatherResponse(35.0759421018392,
+                        126.774759454703));
+    }
 }
